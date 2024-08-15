@@ -3,6 +3,8 @@
     --data_path ./alpaca_data.json \
     --bf16 True \
     --output_dir $WORK/dcft/llama-7b-checkpoints \
+    --include_num_input_tokens_seen \
+    --include_tokens_per_second \
     --num_train_epochs 3 \
     --per_device_train_batch_size 4 \
     --per_device_eval_batch_size 4 \
