@@ -1,7 +1,7 @@
 #!/bin/bash
 #SBATCH --partition=gpu-a100
-#SBATCH --job-name=dfct-alpaca
-#SBATCH --nodes 1
+#SBATCH --job-name=dfct-alpaca-multinode
+#SBATCH --nodes=2  # Specify the number of nodes you want to use
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=128
 #SBATCH -t 48:00:00
@@ -10,10 +10,29 @@
 #SBATCH --mail-type=all
 #SBATCH --mail-user=marten4@illinois.edu
 
+# Load any necessary modules or activate your virtual environment here
+# For example:
+# module load cuda/11.7
+# source $WORK/dcft/stanford_alpaca/venv/bin/activate
 
-# cpu-per-task=0 means use all cpus on the node
+# Set the master node's address (usually the first node in the allocation)
+export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
+export MASTER_PORT=29500
 
-$WORK/dcft/stanford_alpaca/venv/bin/torchrun --nproc_per_node=auto --master_port=12345 train.py \
+# Calculate the total number of processes
+export WORLD_SIZE=$((SLURM_NNODES * SLURM_GPUS_PER_NODE))
+
+# Get the node rank from SLURM_NODEID
+export NODE_RANK=$SLURM_NODEID
+
+# Run the training script
+srun $WORK/dcft/stanford_alpaca/venv/bin/torchrun \
+    --nnodes=$SLURM_NNODES \
+    --nproc_per_node=$SLURM_GPUS_PER_NODE \
+    --rdzv_id=$SLURM_JOB_ID \
+    --rdzv_backend=c10d \
+    --rdzv_endpoint=$MASTER_ADDR:$MASTER_PORT \
+    train.py \
     --model_name_or_path $WORK/dcft/llama-7b \
     --data_path ./alpaca_data.json \
     --bf16 True \
