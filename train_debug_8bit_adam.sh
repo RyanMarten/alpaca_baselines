@@ -16,6 +16,7 @@
     --weight_decay 0. \
     --warmup_ratio 0.03 \
     --lr_scheduler_type "cosine" \
+    --optim "adamw_bnb_8bit" \
     --logging_steps 1 \
     --fsdp "full_shard auto_wrap" \
     --fsdp_transformer_layer_cls_to_wrap 'LlamaDecoderLayer' \
@@ -23,4 +24,3 @@
     # --fsdp "full_shard auto_wrap offload" \
     # --per_device_eval_batch_size 1 \
     # --gradient_accumulation_steps 1 \
-    # --bf16 False \
