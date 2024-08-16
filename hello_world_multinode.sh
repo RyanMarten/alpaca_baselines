@@ -9,8 +9,7 @@
 #SBATCH --mail-type=all
 #SBATCH --mail-user=marten4@illinois.edu
 
-
-echo "hello world!"
+echo "Hello world from node $(hostname) with Slurm proc ID $SLURM_PROCID"
 
 # Set the master node's address (usually the first node in the allocation)
 #export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
