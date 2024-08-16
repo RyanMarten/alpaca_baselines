@@ -7,16 +7,16 @@
 #SBATCH --output=logs/%x_%j.out
 
 echo "Job started at $(date)"
-echo "SLURM_JOB_NODELIST: $SLURM_JOB_NODELIST"
-echo "SLURM_NODELIST: $SLURM_NODELIST"
-echo "SLURM_JOB_NUM_NODES: $SLURM_JOB_NUM_NODES"
-
-srun echo "hello world"
-
+#echo "SLURM_JOB_NODELIST: $SLURM_JOB_NODELIST"
+#echo "SLURM_NODELIST: $SLURM_NODELIST"
+#echo "SLURM_JOB_NUM_NODES: $SLURM_JOB_NUM_NODES"
 env | grep SLURM
 
-#srun hostname
-#srun bash -c 'echo "Hello world from $(hostname) (SLURM_PROCID: $SLURM_PROCID)"'
+#this produces two hello worlds, as expected
+#srun echo "hello world"
+
+srun hostname
+srun bash -c 'echo "Hello world from $(hostname) (SLURM_PROCID: $SLURM_PROCID)"'
 
 #srun sleep 2
 #srun date
