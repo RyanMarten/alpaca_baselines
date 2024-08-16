@@ -18,8 +18,5 @@ srun --nodes=2 --ntasks=2 echo "Hello world from \$SLURMD_NODENAME (SLURM_PROCID
 srun --nodes=2 --ntasks=2 sleep 2
 srun --nodes=2 --ntasks=2 date
 
-echo "Job ended at $(date)"
+echo "Job ended at $(date), reported by $SLURM_NODENAME with PROCID $SLURM_PROCID"
 
-# Print the contents of both log files
-echo "Contents of log files:"
-cat logs/hello-multinode_${SLURM_JOB_ID}_*.out
