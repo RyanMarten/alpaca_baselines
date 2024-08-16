@@ -4,7 +4,8 @@
 #SBATCH --nodes=2  # Specify the number of nodes you want to use
 #SBATCH --ntasks-per-node=1
 #SBATCH -t 0:10:00
-#SBATCH --output=%x_%j.out
+#SBATCH --output=%x_%j_%N.out
+#SBATCH --error=%x_%j_%N.err
 #SBATCH --account=CCR23021
 #SBATCH --mail-type=all
 #SBATCH --mail-user=marten4@illinois.edu
@@ -30,9 +31,9 @@ echo "SLURM_JOB_NODELIST: $SLURM_JOB_NODELIST"
 echo "SLURM_NNODES: $SLURM_NNODES"
 echo "SLURM_GPUS_PER_NODE: $SLURM_GPUS_PER_NODE"
 echo "SLURM_JOB_ID: $SLURM_JOB_ID"
+echo "SLURM_PROCID: $SLURM_PROCID"
 echo "MASTER_ADDR: $MASTER_ADDR"
 echo "MASTER_PORT: $MASTER_PORT"
-echo "SLURM_PROCID: $SLURM_PROCID"
 
 # Run the training script
 $WORK/dcft/stanford_alpaca/venv/bin/torchrun \
