@@ -1,10 +1,10 @@
 #!/bin/bash
 #SBATCH --partition=gpu-a100-dev
 #SBATCH --job-name=dcft-alpaca-multinode
-#SBATCH --nodes=2  # Specify the number of nodes you want to use
+#SBATCH --nodes=2
 #SBATCH --ntasks-per-node=1
-#SBATCH -t 0:30:00
-#SBATCH --output=logs/%x_%j_%N.out
+#SBATCH -t 00:30:00
+#SBATCH --output=logs/%x_%j.out
 #SBATCH --account=CCR23021
 #SBATCH --mail-type=all
 #SBATCH --mail-user=marten4@illinois.edu
@@ -19,16 +19,14 @@ export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
 export MASTER_PORT=29500
 
 echo "Show hostnames $(scontrol show hostnames $SLURM_JOB_NODELIST | tr '\n' ' ')"
-# Calculate the total number of processes
-# export WORLD_SIZE=$((SLURM_NNODES * SLURM_GPUS_PER_NODE))
 
-export NCCL_DEBUG=info
-export NCCL_ASYNC_ERROR_HANDLING=1
-export TORCH_DISTRIBUTED_DEBUG=DETAIL
+#export NCCL_DEBUG=info
+#export NCCL_ASYNC_ERROR_HANDLING=1
+#export TORCH_DISTRIBUTED_DEBUG=DETAIL
 
 # Get the node rank from SLURM_NODEID
 export NODE_RANK=$SLURM_NODEID
-export SLURM_GPUS_PER_NODE=2
+export GPUS_PER_NODE=2
 
 # Debug output
 echo "SLURM_JOB_NODELIST: $SLURM_JOB_NODELIST"
@@ -43,13 +41,13 @@ echo "Node: $(hostname)"
 
 # ensuring the environment is available
 echo "Printing torch version"
-$WORK/dcft/stanford_alpaca/venv/bin/python -c "import torch; print(torch.__version__)"
+srun $WORK/dcft/stanford_alpaca/venv/bin/python -c "import torch; print(torch.__version__)"
 
 # Run the training script
 echo "Starting torchrun command..."
-$WORK/dcft/stanford_alpaca/venv/bin/torchrun \
+srun $WORK/dcft/stanford_alpaca/venv/bin/torchrun \
     --nnodes=$SLURM_NNODES \
-    --nproc_per_node=$SLURM_GPUS_PER_NODE \
+    --nproc_per_node=$GPUS_PER_NODE \
     --nnodes=$SLURM_NNODES \
     --node_rank=$SLURM_PROCID \
     --master_addr=$MASTER_ADDR \
