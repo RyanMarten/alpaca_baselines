@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --partition=gpu-a100
-#SBATCH --job-name=dfct-alpaca-multinode
+#SBATCH --job-name=dcft-alpaca-multinode
 #SBATCH --nodes=2  # Specify the number of nodes you want to use
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=128
@@ -20,7 +20,8 @@ export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
 export MASTER_PORT=29500
 
 # Calculate the total number of processes
-export WORLD_SIZE=$((SLURM_NNODES * SLURM_GPUS_PER_NODE))
+# export WORLD_SIZE=$((SLURM_NNODES * SLURM_GPUS_PER_NODE))
+
 
 # Get the node rank from SLURM_NODEID
 export NODE_RANK=$SLURM_NODEID
