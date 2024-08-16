@@ -22,9 +22,8 @@ export MASTER_PORT=29500
 export NODE_RANK=$SLURM_NODEID
 export GPUS_PER_NODE=2
 
-#export NCCL_DEBUG=info
-#export NCCL_ASYNC_ERROR_HANDLING=1
-#export TORCH_DISTRIBUTED_DEBUG=DETAIL
+export NCCL_DEBUG=info
+export TORCH_DISTRIBUTED_DEBUG=DETAIL
 
 # Debug output
 echo "SLURM_JOB_NODELIST: $SLURM_JOB_NODELIST"
@@ -41,6 +40,7 @@ srun bash -c 'echo "Hello world from $SLURMD_NODENAME (SLURM_PROCID: $SLURM_PROC
 
 # ensuring the environment is available
 srun $WORK/dcft/stanford_alpaca/venv/bin/python -c "import torch; print('Torch version:', torch.__version__)"
+srun $WORK/dcft/stanford_alpaca/venv/bin/python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}, Device count: {torch.cuda.device_count()}')"
 
 # Run the training script
 srun echo "Starting torchrun command..."
