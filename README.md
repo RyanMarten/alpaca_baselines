@@ -1,4 +1,8 @@
 
+##### additional setup steps
+```git lfs install```
+```git clone https://huggingface.co/huggyllama/llama-7b```
+
 <p align="center" width="100%">
 <img src="assets/logo.png" alt="Stanford-Alpaca" style="width: 50%; min-width: 300px; display: block; margin: auto;">
 </p>
