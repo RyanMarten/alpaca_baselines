@@ -4,7 +4,7 @@ OUTPUT_DIR="/home/ec2-user/alpaca-checkpoints"
 
 mkdir -p $OUTPUT_DIR
 
-torchrun --nproc_per_node=auto --master_port=12345 train.py \
+torchrun --nnodes=1 --nproc_per_node=1 --master_port=12345 train.py \
     --model_name_or_path $MODEL_PATH \
     --data_path ./alpaca_data.json \
     --bf16 False \

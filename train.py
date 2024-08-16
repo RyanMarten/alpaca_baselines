@@ -22,7 +22,6 @@ import transformers
 import utils
 from torch.utils.data import Dataset
 from transformers import Trainer
-import torch.distributed as dist
 
 IGNORE_INDEX = -100
 DEFAULT_PAD_TOKEN = "[PAD]"
@@ -189,11 +188,6 @@ def train():
         cache_dir=training_args.cache_dir,
     )
 
-    # ADDING DISTRIBUTED HERE
-    if training_args.local_rank != -1:
-        torch.cuda.set_device(training_args.local_rank)
-        dist.init_process_group(backend='nccl') 
-
     tokenizer = transformers.AutoTokenizer.from_pretrained(
         model_args.model_name_or_path,
         cache_dir=training_args.cache_dir,
@@ -220,10 +214,6 @@ def train():
     print(training_args)
     
     data_module = make_supervised_data_module(tokenizer=tokenizer, data_args=data_args)
-
-    if training_args.local_rank != -1:
-        data_module['train_dataset'] = DistributedSampler(data_module['train_dataset']) 
-
     trainer = Trainer(model=model, tokenizer=tokenizer, args=training_args, **data_module)
 
     trainer.train()
