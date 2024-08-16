@@ -42,24 +42,16 @@ srun bash -c 'echo "Hello world from $SLURMD_NODENAME (SLURM_PROCID: $SLURM_PROC
 srun $WORK/dcft/stanford_alpaca/venv/bin/python -c "import torch; print('Torch version:', torch.__version__)"
 srun $WORK/dcft/stanford_alpaca/venv/bin/python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}, Device count: {torch.cuda.device_count()}')"
 
-# Run the training script
-srun echo "Starting torchrun command..."
-srun $WORK/dcft/stanford_alpaca/venv/bin/torchrun \
-    --nnodes=$SLURM_NNODES \
-    --nproc_per_node=$GPUS_PER_NODE \
-    --nnodes=$SLURM_NNODES \
-    --node_rank=$SLURM_PROCID \
-    --master_addr=$MASTER_ADDR \
-    --master_port=$MASTER_PORT \ 
-    $WORK/dcft/stanford_alpaca/train.py \
+./venv/bin/torchrun --nproc_per_node=auto --master_port=12345 train.py \
     --model_name_or_path $WORK/dcft/llama-7b \
     --data_path ./alpaca_data.json \
-    --bf16 True \
+    --bf16 False \
+    --gradient_checkpointing True \
     --output_dir $WORK/dcft/llama-7b-checkpoints \
-    --num_train_epochs 3 \
-    --per_device_train_batch_size 4 \
-    --per_device_eval_batch_size 4 \
-    --gradient_accumulation_steps 8 \
+    --include_num_input_tokens_seen \
+    --include_tokens_per_second \
+    --num_train_epochs 4 \
+    --per_device_train_batch_size 1 \
     --evaluation_strategy "no" \
     --save_strategy "steps" \
     --save_steps 2000 \
@@ -69,6 +61,10 @@ srun $WORK/dcft/stanford_alpaca/venv/bin/torchrun \
     --warmup_ratio 0.03 \
     --lr_scheduler_type "cosine" \
     --logging_steps 1 \
-    --fsdp "full_shard auto_wrap offload" \
+    --fsdp "full_shard auto_wrap" \
     --fsdp_transformer_layer_cls_to_wrap 'LlamaDecoderLayer' \
     --tf32 True
+    # --fsdp "full_shard auto_wrap offload" \
+    # --per_device_eval_batch_size 1 \
+    # --gradient_accumulation_steps 1 \
+    # --bf16 False \
