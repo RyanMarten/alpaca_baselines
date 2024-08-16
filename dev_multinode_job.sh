@@ -44,7 +44,7 @@ srun $WORK/dcft/stanford_alpaca/venv/bin/python -c "import torch; print(f'CUDA a
 
 # Run the training script
 srun echo "Starting torchrun command..."
-./venv/bin/torchrun --rdzv-id=$SLURM_JOB_ID --rdzv-backend=c10d --rdzv-endpoint=$MASTER_ADDR:$MASTERPORT --master_addr=$MASTER_ADDR --node_rank=$SLURM_PROCID --nnodes=$SLURM_NNODES --nproc_per_node=auto --master_port=12345 train.py \
+./venv/bin/torchrun --rdzv-id=$SLURM_JOB_ID --rdzv-backend=c10d --rdzv-endpoint=$MASTER_ADDR:$MASTER_PORT --master_addr=$MASTER_ADDR --node_rank=$SLURM_PROCID --nnodes=$SLURM_NNODES --nproc_per_node=auto --master_port=12345 train.py \
     --model_name_or_path $WORK/dcft/llama-7b \
     --data_path ./alpaca_data.json \
     --bf16 False \
