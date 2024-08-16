@@ -4,12 +4,12 @@
 #SBATCH --nodes=2  # Specify the number of nodes you want to use
 #SBATCH --ntasks-per-node=1
 #SBATCH -t 0:30:00
-#SBATCH --output=logs/%x_%j_%N.out
+#SBATCH --output=logs/%x_%j_%t.out
 #SBATCH --account=CCR23021
 #SBATCH --mail-type=all
 #SBATCH --mail-user=marten4@illinois.edu
 
-echo "Hello world from node $(hostname) with Slurm proc ID $SLURM_PROCID"
+srun echo "Hello world from node $(hostname) with Slurm proc ID $SLURM_PROCID"
 
 # Set the master node's address (usually the first node in the allocation)
 #export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
