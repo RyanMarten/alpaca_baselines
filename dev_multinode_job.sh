@@ -18,6 +18,9 @@
 export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
 export MASTER_PORT=12345
 
+# Shorten time out to 3 minutes
+export NCCL_TIMEOUT=180
+
 # Get the node rank from SLURM_NODEID
 export NODE_RANK=$SLURM_NODEID
 export GPUS_PER_NODE=2
@@ -41,6 +44,39 @@ srun bash -c 'echo "Hello world from $SLURMD_NODENAME (SLURM_PROCID: $SLURM_PROC
 # ensuring the environment is available
 srun $WORK/dcft/stanford_alpaca/venv/bin/python -c "import torch; print('Torch version:', torch.__version__)"
 srun $WORK/dcft/stanford_alpaca/venv/bin/python -c "import torch; print(f'CUDA available: {torch.cuda.is_available()}, Device count: {torch.cuda.device_count()}')"
+
+# Network connectivity check
+echo "Checking network connectivity..."
+srun --nodes=$SLURM_NNODES --ntasks=$SLURM_NNODES bash -c '
+    for host in $(scontrol show hostnames $SLURM_JOB_NODELIST); do
+        if ! ping -c 1 $host &> /dev/null; then
+            echo "Error: Unable to reach $host from $(hostname)"
+            exit 1
+        fi
+    done
+    echo "Network connectivity check passed on $(hostname)"
+'
+
+if [ $? -ne 0 ]; then
+    echo "Network connectivity check failed. Exiting."
+    exit 1
+fi
+
+# MASTER_ADDR and MASTER_PORT check
+echo "Checking MASTER_ADDR and MASTER_PORT..."
+srun --nodes=$SLURM_NNODES --ntasks=$SLURM_NNODES bash -c '
+    if ! nc -z -w5 $MASTER_ADDR $MASTER_PORT; then
+        echo "Error: Unable to connect to $MASTER_ADDR:$MASTER_PORT from $(hostname)"
+        exit 1
+    fi
+    echo "MASTER_ADDR and MASTER_PORT check passed on $(hostname)"
+'
+
+if [ $? -ne 0 ]; then
+    echo "MASTER_ADDR and MASTER_PORT check failed. Exiting."
+    exit 1
+fi
+
 
 # Run the training script
 srun echo "Starting torchrun command..."
