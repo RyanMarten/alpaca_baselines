@@ -22,9 +22,16 @@ export MASTER_PORT=29500
 # Calculate the total number of processes
 # export WORLD_SIZE=$((SLURM_NNODES * SLURM_GPUS_PER_NODE))
 
-
 # Get the node rank from SLURM_NODEID
 export NODE_RANK=$SLURM_NODEID
+export SLURM_GPUS_PER_NODE=2
+
+# Debug output
+echo "SLURM_NNODES: $SLURM_NNODES"
+echo "SLURM_GPUS_PER_NODE: $SLURM_GPUS_PER_NODE"
+echo "SLURM_JOB_ID: $SLURM_JOB_ID"
+echo "MASTER_ADDR: $MASTER_ADDR"
+echo "MASTER_PORT: $MASTER_PORT"
 
 # Run the training script
 srun $WORK/dcft/stanford_alpaca/venv/bin/torchrun \
