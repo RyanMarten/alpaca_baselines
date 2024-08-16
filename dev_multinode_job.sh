@@ -1,10 +1,10 @@
 #!/bin/bash
-#SBATCH --partition=gpu-a100
+#SBATCH --partition=gpu-a100-dev
 #SBATCH --job-name=dcft-alpaca-multinode
 #SBATCH --nodes=2  # Specify the number of nodes you want to use
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=128
-#SBATCH -t 48:00:00
+#SBATCH -t 0:00:10
 #SBATCH --output=%x_%j.out
 #SBATCH --account=CCR23021
 #SBATCH --mail-type=all
@@ -33,16 +33,14 @@ echo "SLURM_GPUS_PER_NODE: $SLURM_GPUS_PER_NODE"
 echo "SLURM_JOB_ID: $SLURM_JOB_ID"
 echo "MASTER_ADDR: $MASTER_ADDR"
 echo "MASTER_PORT: $MASTER_PORT"
-echo "SLURM_PROCID: $SLURM_PROCID"
 
 # Run the training script
 srun $WORK/dcft/stanford_alpaca/venv/bin/torchrun \
     --nnodes=$SLURM_NNODES \
     --nproc_per_node=$SLURM_GPUS_PER_NODE \
-    --nnodes=$SLURM_NNODES \
-    --node_rank=$SLURM_PROCID \
-    --master_addr=$MASTER_ADDR \
-    --master_port=$MASTER_PORT \ 
+    --rdzv_id=$SLURM_JOB_ID \
+    --rdzv_backend=c10d \
+    --rdzv_endpoint=$MASTER_ADDR:$MASTER_PORT \
     train.py \
     --model_name_or_path $WORK/dcft/llama-7b \
     --data_path ./alpaca_data.json \
