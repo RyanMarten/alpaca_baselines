@@ -9,6 +9,8 @@
 echo "Job started at $(date)"
 echo "SLURM_JOB_NODELIST: $SLURM_JOB_NODELIST"
 echo "SLURM_NODELIST: $SLURM_NODELIST"
+echo "SLURM_JOB_NUM_NODES: $SLURM_JOB_NUM_NODES"
+
 
 # Force execution on all allocated nodes
 srun hostname

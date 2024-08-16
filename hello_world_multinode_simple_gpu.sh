@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --partition=development
+#SBATCH --partition=gpu-a100-dev
 #SBATCH --job-name=hello-multinode
 #SBATCH --nodes=2
 #SBATCH --ntasks-per-node=1
@@ -9,11 +9,9 @@
 echo "Job started at $(date)"
 echo "SLURM_JOB_NODELIST: $SLURM_JOB_NODELIST"
 echo "SLURM_NODELIST: $SLURM_NODELIST"
-echo "SLURM_JOB_NUM_NODES: $SLURM_JOB_NUM_NODES"
 
 srun echo "hello world"
-
-env | grep SLURM
+srun nvidia-smi
 
 #srun hostname
 #srun bash -c 'echo "Hello world from $(hostname) (SLURM_PROCID: $SLURM_PROCID)"'
