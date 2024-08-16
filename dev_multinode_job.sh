@@ -3,9 +3,8 @@
 #SBATCH --job-name=dcft-alpaca-multinode
 #SBATCH --nodes=2  # Specify the number of nodes you want to use
 #SBATCH --ntasks-per-node=1
-#SBATCH -t 0:10:00
-#SBATCH --output=%x_%j_%N.out
-#SBATCH --error=%x_%j_%N.err
+#SBATCH -t 0:30:00
+#SBATCH --output=logs/%x_%j_%N.out
 #SBATCH --account=CCR23021
 #SBATCH --mail-type=all
 #SBATCH --mail-user=marten4@illinois.edu
@@ -19,6 +18,7 @@
 export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
 export MASTER_PORT=29500
 
+echo "Show hostnames $(scontrol show hostnames $SLURM_JOB_NODELIST)"
 # Calculate the total number of processes
 # export WORLD_SIZE=$((SLURM_NNODES * SLURM_GPUS_PER_NODE))
 
@@ -35,7 +35,14 @@ echo "SLURM_PROCID: $SLURM_PROCID"
 echo "MASTER_ADDR: $MASTER_ADDR"
 echo "MASTER_PORT: $MASTER_PORT"
 
+echo "Node: $(hostname)"
+
+# ensuring the environment is available
+echo "Printing torch version"
+$WORK/dcft/stanford_alpaca/venv/bin/python -c "import torch; print(torch.__version__)"
+
 # Run the training script
+echo "Starting torchrun command..."
 $WORK/dcft/stanford_alpaca/venv/bin/torchrun \
     --nnodes=$SLURM_NNODES \
     --nproc_per_node=$SLURM_GPUS_PER_NODE \
@@ -43,7 +50,7 @@ $WORK/dcft/stanford_alpaca/venv/bin/torchrun \
     --node_rank=$SLURM_PROCID \
     --master_addr=$MASTER_ADDR \
     --master_port=$MASTER_PORT \ 
-    train.py \
+    $WORK/dcft/stanford_alpaca/train.py \
     --model_name_or_path $WORK/dcft/llama-7b \
     --data_path ./alpaca_data.json \
     --bf16 True \
