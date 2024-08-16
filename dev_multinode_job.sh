@@ -22,6 +22,10 @@ echo "Show hostnames $(scontrol show hostnames $SLURM_JOB_NODELIST)"
 # Calculate the total number of processes
 # export WORLD_SIZE=$((SLURM_NNODES * SLURM_GPUS_PER_NODE))
 
+export NCCL_DEBUG=info
+export NCCL_ASYNC_ERROR_HANDLING=1
+export TORCH_DISTRIBUTED_DEBUG=DETAIL
+
 # Get the node rank from SLURM_NODEID
 export NODE_RANK=$SLURM_NODEID
 export SLURM_GPUS_PER_NODE=2
