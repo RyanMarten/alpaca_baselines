@@ -18,7 +18,7 @@
 export MASTER_ADDR=$(scontrol show hostnames $SLURM_JOB_NODELIST | head -n 1)
 export MASTER_PORT=29500
 
-echo "Show hostnames $(scontrol show hostnames $SLURM_JOB_NODELIST)"
+echo "Show hostnames $(scontrol show hostnames $SLURM_JOB_NODELIST | tr '\n' ' ')"
 # Calculate the total number of processes
 # export WORLD_SIZE=$((SLURM_NNODES * SLURM_GPUS_PER_NODE))
 
