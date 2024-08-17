@@ -11,7 +11,6 @@ echo "SLURM_JOB_NODELIST: $SLURM_JOB_NODELIST"
 echo "SLURM_NODELIST: $SLURM_NODELIST"
 echo "SLURM_JOB_NUM_NODES: $SLURM_JOB_NUM_NODES"
 
-
 # Force execution on all allocated nodes
 srun hostname
 srun bash -c 'echo "Hello world from $(hostname) (SLURM_PROCID: $SLURM_PROCID)"'
