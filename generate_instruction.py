@@ -14,7 +14,7 @@ import random
 import re
 import string
 from functools import partial
-from multiprocessing import Pool
+import multiprocessing
 
 import numpy as np
 import tqdm
@@ -46,12 +46,16 @@ def encode_prompt(prompt_instructions):
 def post_process_response(num_prompt_instructions, response):
     if response is None:
         return []
-    raw_instructions = f"{num_prompt_instructions+1}. Instruction:" + response["text"]
+    
+    message = response.choices[0].message.content
+    finish_reason = response.choices[0].finish_reason
+
+    raw_instructions = f"{num_prompt_instructions+1}. Instruction:" + message
     raw_instructions = re.split("###", raw_instructions)
     instructions = []
     for idx, inst in enumerate(raw_instructions):
         # if the decoding stops due to length, the last example is likely truncated so we discard it
-        if idx == len(raw_instructions) - 1 and response["finish_reason"] == "length":
+        if idx == len(raw_instructions) - 1 and finish_reason == "length":
             continue
         idx += num_prompt_instructions + 1
         splitted_data = re.split(f"{idx}\.\s+(Instruction|Input|Output):", inst)
@@ -125,6 +129,7 @@ def generate_instruction_following_data(
 
     os.makedirs(output_dir, exist_ok=True)
     request_idx = 0
+
     # load the LM-generated instructions
     machine_instruction_data = []
     if os.path.exists(os.path.join(output_dir, "regen.json")):
@@ -146,6 +151,7 @@ def generate_instruction_following_data(
     all_instruction_tokens = [scorer._tokenizer.tokenize(inst) for inst in all_instructions]
 
     # intialize openAI client
+    print("Initalizing openAI client")
     client = OpenAI()
 
     while len(machine_instruction_data) < num_instructions_to_generate:
@@ -154,6 +160,7 @@ def generate_instruction_following_data(
         prompt_instructions = random.sample(seed_instruction_data, num_prompt_instructions)
         prompt = encode_prompt(prompt_instructions)
 
+        print("Starting request")
         request_start = time.time()
         # logit_bias, stop, and max_tokens follow from their original decoding arguments
         # GPT4o tokenzier has a new end of text token: 199999
@@ -167,10 +174,8 @@ def generate_instruction_following_data(
         )
         request_duration = time.time() - request_start
 
-        pdb.set_trace()
-
+        print('Processing response')
         process_start = time.time()
-        
         instruction_data = post_process_response(num_prompt_instructions, response)
 
         total = len(instruction_data)
@@ -178,7 +183,11 @@ def generate_instruction_following_data(
         for instruction_data_entry in instruction_data:
             # computing similarity with the pre-tokenzied instructions
             new_instruction_tokens = scorer._tokenizer.tokenize(instruction_data_entry["instruction"])
-            rouge_scores = rouge_scorer._score_lcs(new_instruction_tokens, all_instruction_tokens)
+            with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
+                rouge_scores = p.map(
+                    partial(rouge_scorer._score_lcs, new_instruction_tokens),
+                    all_instruction_tokens,
+                )
             rouge_scores = [score.fmeasure for score in rouge_scores]
             most_similar_instructions = {
                 all_instructions[i]: rouge_scores[i] for i in np.argsort(rouge_scores)[-10:][::-1]
@@ -197,6 +206,7 @@ def generate_instruction_following_data(
         print(f"Request {request_idx} took {request_duration:.2f}s, processing took {process_duration:.2f}s")
         print(f"Generated {total} instructions, kept {keep} instructions")
         utils.jdump(machine_instruction_data, os.path.join(output_dir, "regen.json"))
+        pdb.set_trace()
 
 def main(task, **kwargs):
     globals()[task](**kwargs)

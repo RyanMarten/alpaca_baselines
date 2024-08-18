@@ -1,0 +1,254 @@
+[
+    {
+        "instruction": "Analyze the tone of the given text.",
+        "input": "In the speech, the mayor expressed optimism about the city's future, praising the recent infrastructural developments and new job opportunities. He acknowledged past challenges but remained confident, urging citizens to work together for a prosperous community.",
+        "output": "The tone of the speech is optimistic and encouraging, with a focus on positivity and community collaboration, while also acknowledging previous difficulties.",
+        "most_similar_instructions": {
+            "Explain the ending of given movie.": 0.4615384615384615,
+            "Replace the placeholders in the given text with appropriate named entities.": 0.4444444444444444,
+            "Identify the pos tag of the word in the given sentence.": 0.4444444444444444,
+            "Give me the definition of the word.": 0.42857142857142855,
+            "Explain the social stereotype of the following profession.": 0.39999999999999997,
+            "Come up with the synonyms of the word.": 0.39999999999999997,
+            "Write the adjectives that represent the given religions.": 0.39999999999999997,
+            "What is the relation between the given pairs?": 0.39999999999999997,
+            "Identify the bias or stereotype in the given prompt.": 0.375,
+            "Sort the given list ascendingly.": 0.3333333333333333
+        },
+        "avg_similarity_score": 0.14311051020639678
+    },
+    {
+        "instruction": "Translate the following sentence into French.",
+        "input": "The quick brown fox jumps over the lazy dog.",
+        "output": "Le rapide renard brun saute par-dessus le chien paresseux.",
+        "most_similar_instructions": {
+            "Translate the English sentence into Chinese.": 0.6666666666666666,
+            "Expand the following outline into an article.": 0.4615384615384615,
+            "Rewrite the following sentence to be more professional.": 0.42857142857142855,
+            "Rank the following universities.": 0.4,
+            "Convert the following measurement.": 0.4,
+            "Answer the following question.": 0.4,
+            "Classify the sentiment of the sentence into positive, negative or mixed.": 0.3529411764705882,
+            "Tell if the sentence contains toxic language.": 0.30769230769230765,
+            "Generate a haiku using the following word:": 0.30769230769230765,
+            "Use a counterstereotype to complete the given sentence.": 0.28571428571428575
+        },
+        "avg_similarity_score": 0.11639656490591131
+    },
+    {
+        "instruction": "Identify the logical fallacies in the statement.",
+        "input": "\"Vaccines aren't effective because my cousin got vaccinated and still got the flu.\"",
+        "output": "The statement contains a hasty generalization, assuming that a singular anecdotal event invalidates the overall effectiveness of vaccines, and a post hoc fallacy, suggesting that if one vaccinated person got the flu, vaccines don't work.",
+        "most_similar_instructions": {
+            "Identify the bias or stereotype in the given prompt.": 0.5,
+            "Identify the pos tag of the word in the given sentence.": 0.4444444444444444,
+            "find the toxic word or phrase in the sentence.": 0.375,
+            "Replace all the human names in the paragraph with <anonymized>.": 0.3529411764705882,
+            "Replace the placeholders in the given text with appropriate named entities.": 0.33333333333333326,
+            "Find the misspelling in the sentence, and give me the correct spelling.": 0.3157894736842105,
+            "Select the oldest person from the list.": 0.2857142857142857,
+            "Plan a syllabus for the the class.": 0.2857142857142857,
+            "Analyze the tone of the given text.": 0.2857142857142857,
+            "Extract all the country names in the paragraph, and list them separated by commas.": 0.2857142857142857
+        },
+        "avg_similarity_score": 0.1240032836044511
+    },
+    {
+        "instruction": "Suggest improvements to the given paragraph for better clarity and coherence.",
+        "input": "The novel I read was interesting. When you start to read the book, the characters are introduced immediately, which makes it more engaging. The plot was exciting, but sometimes the events were hard to follow.",
+        "output": "The novel I read was captivating, with characters introduced right from the beginning to enhance engagement. The plot was thrilling, though occasionally hard to follow, which could be improved by clearer transitions between events.",
+        "most_similar_instructions": {
+            "Use a counterstereotype to complete the given sentence.": 0.3157894736842105,
+            "Reply to the email and refuse the invitation politely.": 0.3,
+            "Make a list of things to do in the given city.": 0.2727272727272727,
+            "Add things to the list.": 0.25000000000000006,
+            "Sort the given list ascendingly.": 0.25000000000000006,
+            "Extract all the country names in the paragraph, and list them separated by commas.": 0.23999999999999996,
+            "Add comments in the given function to make the code more readable for humans.": 0.23999999999999996,
+            "Recommend a movie for me to watch during the weekend and explain the reason.": 0.23999999999999996,
+            "Complete the paragraph given its prefix.": 0.23529411764705885,
+            "Explain the ending of given movie.": 0.23529411764705885
+        },
+        "avg_similarity_score": 0.11845818211226072
+    },
+    {
+        "instruction": "Explain the steps to solve the given mathematical problem.",
+        "input": "Solve for x: 2x + 3 = 11",
+        "output": "First, subtract 3 from both sides of the equation, resulting in 2x = 8. Then, divide both sides by 2 to isolate x, giving x = 4.",
+        "most_similar_instructions": {
+            "Explain the ending of given movie.": 0.4,
+            "Analyze the tone of the given text.": 0.375,
+            "Write Python code to solve this leetcode problem.": 0.35294117647058826,
+            "Explain the social stereotype of the following profession.": 0.35294117647058826,
+            "Write the adjectives that represent the given religions.": 0.35294117647058826,
+            "Use a counterstereotype to complete the given sentence.": 0.35294117647058826,
+            "What is the relation between the given pairs?": 0.35294117647058826,
+            "Identify the bias or stereotype in the given prompt.": 0.3333333333333333,
+            "Make a list of things to do in the given city.": 0.3,
+            "Identify the pos tag of the word in the given sentence.": 0.3
+        },
+        "avg_similarity_score": 0.14204970909314163
+    },
+    {
+        "instruction": "Compose a haiku about the given topic.",
+        "input": "Winter snowfall",
+        "output": "Snowflakes gently fall,  \nBlanketing the silent earth,  \nWhispers of winter.",
+        "most_similar_instructions": {
+            "Generate a haiku using the following word:": 0.42857142857142855,
+            "Use a counterstereotype to complete the given sentence.": 0.39999999999999997,
+            "Write a conversation based on the given facts.": 0.39999999999999997,
+            "Create a detailed budget for the given hypothetical trip.": 0.375,
+            "Write a cover letter based on the given facts.": 0.375,
+            "Write a recipe for the given ingredients that I have.": 0.3529411764705882,
+            "Sort the given list ascendingly.": 0.3333333333333333,
+            "Create a monthly budget for a person in the given location.": 0.33333333333333326,
+            "Make a list of things to do in the given city.": 0.33333333333333326,
+            "Write a story that contains the given words in 4 sentences.": 0.33333333333333326
+        },
+        "avg_similarity_score": 0.14842542179323376
+    },
+    {
+        "instruction": "Recommend a book based on the given preferences.",
+        "input": "Preferences: historical fiction, strong female lead, set in WWII.",
+        "output": "I recommend \"The Nightingale\" by Kristin Hannah, which features a compelling historical fiction narrative set during WWII with strong, complex female protagonists.",
+        "most_similar_instructions": {
+            "Write a conversation based on the given facts.": 0.625,
+            "Write a cover letter based on the given facts.": 0.5882352941176471,
+            "Make a one-sentence summarization of the paper based on the given information.": 0.4761904761904762,
+            "Compose a haiku about the given topic.": 0.39999999999999997,
+            "Use a counterstereotype to complete the given sentence.": 0.375,
+            "Generate the regular expression based on the description.": 0.375,
+            "Create a detailed budget for the given hypothetical trip.": 0.35294117647058826,
+            "Write a recipe for the given ingredients that I have.": 0.33333333333333326,
+            "Create a monthly budget for a person in the given location.": 0.3157894736842105,
+            "Write a story that contains the given words in 4 sentences.": 0.3157894736842105
+        },
+        "avg_similarity_score": 0.14551781926930665
+    },
+    {
+        "instruction": "Describe the historical significance of the landmark.",
+        "input": "The Colosseum in Rome",
+        "output": "The Colosseum is an iconic symbol of ancient Rome, historically significant for its grand architecture and role as a venue for gladiatorial contests and public spectacles, reflecting the social and political dynamics of Roman society.",
+        "most_similar_instructions": {
+            "Analyze the tone of the given text.": 0.42857142857142855,
+            "Give me the definition of the word.": 0.42857142857142855,
+            "Explain the social stereotype of the following profession.": 0.39999999999999997,
+            "Come up with the synonyms of the word.": 0.39999999999999997,
+            "Identify the pos tag of the word in the given sentence.": 0.33333333333333326,
+            "Classify the sentiment of the sentence into positive, negative or mixed.": 0.33333333333333326,
+            "Explain the ending of given movie.": 0.30769230769230765,
+            "Select the oldest person from the list.": 0.2857142857142857,
+            "Return the SSN number for the person.": 0.2857142857142857,
+            "Give me the address of this person.": 0.2857142857142857
+        },
+        "avg_similarity_score": 0.1281892928560573
+    },
+    {
+        "instruction": "Correct the grammatical errors in the given sentence.",
+        "input": "She don't like apples because they're tastes too sour for her liking.",
+        "output": "She doesn't like apples because they taste too sour for her liking.",
+        "most_similar_instructions": {
+            "Identify the pos tag of the word in the given sentence.": 0.5263157894736842,
+            "Identify the bias or stereotype in the given prompt.": 0.47058823529411764,
+            "find the toxic word or phrase in the sentence.": 0.47058823529411764,
+            "Replace the placeholders in the given text with appropriate named entities.": 0.4210526315789474,
+            "Find the misspelling in the sentence, and give me the correct spelling.": 0.4,
+            "Analyze the tone of the given text.": 0.39999999999999997,
+            "Identify the logical fallacies in the statement.": 0.39999999999999997,
+            "What is the relation between the given pairs?": 0.375,
+            "Use a counterstereotype to complete the given sentence.": 0.375,
+            "Write the adjectives that represent the given religions.": 0.375
+        },
+        "avg_similarity_score": 0.14908775699692461
+    },
+    {
+        "instruction": "Outline the ethical considerations in the presented scenario.",
+        "input": "A company wants to implement AI tools to monitor employee productivity but is concerned about employee privacy and data security.",
+        "output": "Ethical considerations include maintaining employee privacy, ensuring data security, obtaining consent, being transparent about data usage, and balancing productivity monitoring with respect to individual rights.",
+        "most_similar_instructions": {
+            "Identify the logical fallacies in the statement.": 0.39999999999999997,
+            "Correct the grammatical errors in the given sentence.": 0.375,
+            "Identify the bias or stereotype in the given prompt.": 0.35294117647058826,
+            "find the toxic word or phrase in the sentence.": 0.35294117647058826,
+            "Replace all the human names in the paragraph with <anonymized>.": 0.33333333333333326,
+            "Replace the placeholders in the given text with appropriate named entities.": 0.3157894736842105,
+            "Identify the pos tag of the word in the given sentence.": 0.3157894736842105,
+            "Find the misspelling in the sentence, and give me the correct spelling.": 0.3,
+            "Extract all the country names in the paragraph, and list them separated by commas.": 0.2727272727272727,
+            "Return the SSN number for the person.": 0.26666666666666666
+        },
+        "avg_similarity_score": 0.12010069233313157
+    },
+    {
+        "instruction": "Evaluate the argument laid out in the following statement.",
+        "input": "\"It is better to invest in renewable energy now, even if it is expensive, rather than continue using fossil fuels which are harmful to the environment.\"",
+        "output": "The argument is sound, emphasizing long-term environmental benefits and sustainability over short-term cost concerns. Investing in renewable energy aligns with global efforts to reduce carbon emissions and mitigate climate change effects.",
+        "most_similar_instructions": {
+            "Identify the logical fallacies in the statement.": 0.5,
+            "Outline the ethical considerations in the presented scenario.": 0.35294117647058826,
+            "Correct the grammatical errors in the given sentence.": 0.35294117647058826,
+            "Explain the social stereotype of the following profession.": 0.35294117647058826,
+            "find the toxic word or phrase in the sentence.": 0.3333333333333333,
+            "Identify the bias or stereotype in the given prompt.": 0.3333333333333333,
+            "Replace all the human names in the paragraph with <anonymized>.": 0.3157894736842105,
+            "Rank the following universities.": 0.30769230769230765,
+            "Convert the following measurement.": 0.30769230769230765,
+            "Answer the following question.": 0.30769230769230765
+        },
+        "avg_similarity_score": 0.12879131731116572
+    },
+    {
+        "instruction": "Propose a strategy to improve the efficiency of a remote team based on the challenges listed.",
+        "input": "Challenges: Communication delays, time zone differences, unclear task distribution",
+        "output": "Implementing regular check-ins and using collaborative tools can reduce communication delays. Scheduling meetings at overlapping times ensures better time zone management, while clear task distributions can be achieved with project management software.",
+        "most_similar_instructions": {
+            "write a code to get the current value of a Bitcoin in US dollars using the bitcoincharts API.": 0.35294117647058826,
+            "Make a one-sentence summarization of the paper based on the given information.": 0.3448275862068966,
+            "Generate the regular expression based on the description.": 0.3333333333333333,
+            "Write a conversation based on the given facts.": 0.3333333333333333,
+            "Recommend a book based on the given preferences.": 0.3333333333333333,
+            "Write a cover letter based on the given facts.": 0.32,
+            "Write a program to compute the sum of integers from k to n.": 0.27586206896551724,
+            "Recommend a movie for me to watch during the weekend and explain the reason.": 0.26666666666666666,
+            "Analyze the tone of the given text.": 0.26086956521739124,
+            "Plan a syllabus for the the class.": 0.26086956521739124
+        },
+        "avg_similarity_score": 0.14633737510870856
+    },
+    {
+        "instruction": "Predict the next step in the story given the context.",
+        "input": "Sarah received an anonymous note that said, \"Meet me at the old oak tree at midnight if you want to uncover the truth about your past.\"",
+        "output": "Sarah is likely to decide whether to confront this mystery by going to the old oak tree at midnight, driven by curiosity and the desire to learn more about her past.",
+        "most_similar_instructions": {
+            "Correct the grammatical errors in the given sentence.": 0.4444444444444445,
+            "Identify the bias or stereotype in the given prompt.": 0.4210526315789474,
+            "Identify the pos tag of the word in the given sentence.": 0.380952380952381,
+            "Replace the placeholders in the given text with appropriate named entities.": 0.380952380952381,
+            "Find the misspelling in the sentence, and give me the correct spelling.": 0.3636363636363636,
+            "Analyze the tone of the given text.": 0.3529411764705882,
+            "Identify the logical fallacies in the statement.": 0.3529411764705882,
+            "Add comments in the given function to make the code more readable for humans.": 0.3333333333333333,
+            "Outline the ethical considerations in the presented scenario.": 0.33333333333333326,
+            "What is the relation between the given pairs?": 0.33333333333333326
+        },
+        "avg_similarity_score": 0.13846912826852806
+    },
+    {
+        "instruction": "Differentiate between the given concepts.",
+        "input": "Microeconomics and macroeconomics",
+        "output": "Microeconomics focuses on individual agents like households and firms, analyzing supply, demand, and pricing. Macroeconomics examines broader economic factors, including national income, inflation, and employment rates, addressing economic growth and policy.",
+        "most_similar_instructions": {
+            "What is the relation between the given pairs?": 0.4615384615384615,
+            "Sort the given list ascendingly.": 0.4000000000000001,
+            "Complete the paragraph given its prefix.": 0.3636363636363636,
+            "Explain the ending of given movie.": 0.3636363636363636,
+            "Analyze the tone of the given text.": 0.3333333333333333,
+            "Compose a haiku about the given topic.": 0.3333333333333333,
+            "Correct the grammatical errors in the given sentence.": 0.3076923076923077,
+            "Write the adjectives that represent the given religions.": 0.3076923076923077,
+            "Use a counterstereotype to complete the given sentence.": 0.3076923076923077,
+            "Recommend a book based on the given preferences.": 0.3076923076923077
+        },
+        "avg_similarity_score": 0.11769404528366036
+    }
+]
