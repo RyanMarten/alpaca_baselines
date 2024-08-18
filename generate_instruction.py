@@ -20,8 +20,10 @@ import numpy as np
 import tqdm
 from rouge_score import rouge_scorer
 import utils
+from openai import OpenAI
 
 import fire
+import pdb
 
 
 def encode_prompt(prompt_instructions):
@@ -41,7 +43,7 @@ def encode_prompt(prompt_instructions):
     return prompt
 
 
-def post_process_gpt3_response(num_prompt_instructions, response):
+def post_process_response(num_prompt_instructions, response):
     if response is None:
         return []
     raw_instructions = f"{num_prompt_instructions+1}. Instruction:" + response["text"]
@@ -111,12 +113,8 @@ def generate_instruction_following_data(
     output_dir="./",
     seed_tasks_path="./seed_tasks.jsonl",
     num_instructions_to_generate=100,
-    model_name="text-davinci-003",
+    model_name="gpt-4o-2024-08-06",
     num_prompt_instructions=3,
-    request_batch_size=5,
-    temperature=1.0,
-    top_p=1.0,
-    num_cpus=16,
 ):
     seed_tasks = [json.loads(l) for l in open(seed_tasks_path, "r")]
     seed_instruction_data = [
@@ -147,48 +145,40 @@ def generate_instruction_following_data(
     ]
     all_instruction_tokens = [scorer._tokenizer.tokenize(inst) for inst in all_instructions]
 
+    # intialize openAI client
+    client = OpenAI()
+
     while len(machine_instruction_data) < num_instructions_to_generate:
         request_idx += 1
 
-        batch_inputs = []
-        for _ in range(request_batch_size):
-            # only sampling from the seed tasks
-            prompt_instructions = random.sample(seed_instruction_data, num_prompt_instructions)
-            prompt = encode_prompt(prompt_instructions)
-            batch_inputs.append(prompt)
-        decoding_args = utils.OpenAIDecodingArguments(
-            temperature=temperature,
-            n=1,
-            max_tokens=3072,  # hard-code to maximize the length. the requests will be automatically adjusted
-            top_p=top_p,
-            stop=["\n20", "20.", "20."],
-        )
+        prompt_instructions = random.sample(seed_instruction_data, num_prompt_instructions)
+        prompt = encode_prompt(prompt_instructions)
+
         request_start = time.time()
-        results = utils.openai_completion(
-            prompts=batch_inputs,
-            model_name=model_name,
-            batch_size=request_batch_size,
-            decoding_args=decoding_args,
-            logit_bias={"50256": -100},  # prevent the <|endoftext|> token from being generated
+        # logit_bias, stop, and max_tokens follow from their original decoding arguments
+        # GPT4o tokenzier has a new end of text token: 199999
+        # import tiktoken; print(tiktoken.encoding_for_model("gpt-4o").encode('<|endoftext|>', allowed_special={'<|endoftext|>'}))
+        response = client.chat.completions.create(
+        model=model_name,
+        messages=[{"role": "user", "content": prompt}],
+        logit_bias={"199999": -100},
+        stop=["\n20", "20.", "20."],
+        max_tokens=3072
         )
         request_duration = time.time() - request_start
 
+        pdb.set_trace()
+
         process_start = time.time()
-        instruction_data = []
-        for result in results:
-            new_instructions = post_process_gpt3_response(num_prompt_instructions, result)
-            instruction_data += new_instructions
+        
+        instruction_data = post_process_response(num_prompt_instructions, response)
 
         total = len(instruction_data)
         keep = 0
         for instruction_data_entry in instruction_data:
             # computing similarity with the pre-tokenzied instructions
             new_instruction_tokens = scorer._tokenizer.tokenize(instruction_data_entry["instruction"])
-            with Pool(num_cpus) as p:
-                rouge_scores = p.map(
-                    partial(rouge_scorer._score_lcs, new_instruction_tokens),
-                    all_instruction_tokens,
-                )
+            rouge_scores = rouge_scorer._score_lcs(new_instruction_tokens, all_instruction_tokens)
             rouge_scores = [score.fmeasure for score in rouge_scores]
             most_similar_instructions = {
                 all_instructions[i]: rouge_scores[i] for i in np.argsort(rouge_scores)[-10:][::-1]
@@ -207,7 +197,6 @@ def generate_instruction_following_data(
         print(f"Request {request_idx} took {request_duration:.2f}s, processing took {process_duration:.2f}s")
         print(f"Generated {total} instructions, kept {keep} instructions")
         utils.jdump(machine_instruction_data, os.path.join(output_dir, "regen.json"))
-
 
 def main(task, **kwargs):
     globals()[task](**kwargs)
