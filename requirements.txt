@@ -1,4 +1,5 @@
 numpy
+nltk==3.9b1
 rouge_score
 fire
 openai
@@ -7,3 +8,4 @@ torch
 sentencepiece
 tokenizers>=0.13.3
 wandb
+nltk
