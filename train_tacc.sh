@@ -31,7 +31,7 @@ srun bash -c 'echo "Hello world from $(hostname) (SLURM_PROCID: $SLURM_PROCID). 
 
 # Additional environment variables
 export GPUS_PER_NODE=2
-export OUTPUT_DIR=$WORK/dcft/checkpoints/$SBATCH_JOB_NAME
+export OUTPUT_DIR=$WORK/dcft/checkpoints/$SLURM_JOB_NAME
 export MODEL_PATH=$WORK/dcft/llama-7b
 mkdir -p $OUTPUT_DIR
 echo "GPUS_PER_NODE: $GPUS_PER_NODE"
@@ -58,7 +58,6 @@ srun ./venv/bin/torchrun \
     --model_name_or_path $MODEL_PATH \
     --data_path ./alpaca_data.json \
     --bf16 True \
-    --gradient_checkpointing True \
     --output_dir $OUTPUT_DIR \
     --include_num_input_tokens_seen \
     --include_tokens_per_second \
