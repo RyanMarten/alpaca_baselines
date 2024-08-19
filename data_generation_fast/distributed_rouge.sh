@@ -2,7 +2,7 @@
 #SBATCH --partition=normal
 #SBATCH --job-name=distributed_rouge
 #SBATCH --output=../logs/%x_%j.out
-#SBATCH --nodes=4
+#SBATCH --nodes=64
 #SBATCH --ntasks-per-node=1
 #SBATCH --time=00:05:00
 

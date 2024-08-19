@@ -4,7 +4,7 @@ import pdb
 import re 
 import string
 from rouge_score import rouge_scorer
-import tqdm
+from tqdm import tqdm
 import multiprocessing
 from functools import partial
 import numpy as np
@@ -206,9 +206,6 @@ def filter_instructions_heuristics(input_file, output_file):
     percentage_filtered = (total_filtered / total_count) * 100 if total_count > 0 else 0
     print(f"That's {percentage_filtered:.2f}% filtered out of total")
 
-"""
-NOTE: This is EXTREMELY slow
-"""
 def filter_instructions_rouge(input_file, output_file):
     scorer = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=False)
     # pool starts out as the seed instructions
@@ -220,28 +217,25 @@ def filter_instructions_rouge(input_file, output_file):
     
     print(f"Using {multiprocessing.cpu_count()} CPU threads for major bottleneck of ROGUE-L")
 
-    for inst, input_text, output_text in instruction_iterator(input_file):
-        process_start = time.time()
+    total_instructions = sum(1 for _ in instruction_iterator(input_file))
+    for inst, input_text, output_text in tqdm(instruction_iterator(input_file), total=total_instructions, desc="Processing instructions"):
+        # process_start = time.time()
 
         # computing similarity with the pre-tokenzied instructions
         new_instruction_tokens = scorer._tokenizer.tokenize(inst)
-
-        # EXTREMELY SLOW
-        # with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
-        #     rouge_scores = p.map(
-        #         partial(rouge_scorer._score_lcs, new_instruction_tokens),
-        #         current_pool_instruction_tokens,
-        #     )
-        # rouge_scores = [score.fmeasure for score in rouge_scores]
-        # most_similar_instructions = {
-        #     current_pool_instructions[i]: rouge_scores[i] for i in np.argsort(rouge_scores)[-10:][::-1]
-        # }
 
         # Use numpy for faster array operations
         rouge_scores = np.array([rouge_scorer._score_lcs(new_instruction_tokens, tokens).fmeasure for tokens in current_pool_instruction_tokens])
 
         if max(rouge_scores) > 0.7:
-            filtered.append({"instruction": inst, "input": input_text, "output": output_text, "filtered_reason": "rouge_similarity"})
+            filtered.append({
+                "instruction": inst,
+                "input": input_text,
+                "output": output_text,
+                "filtered_reason": "rouge_similarity",
+                "most_similar_score": max(rouge_scores),
+                "most_similar_instruction": current_pool_instructions[np.argmax(rouge_scores)]
+            })
             continue
 
         # If not filtered, add to not_filtered list
@@ -250,8 +244,8 @@ def filter_instructions_rouge(input_file, output_file):
         current_pool_instructions.append(inst)
         current_pool_instruction_tokens.append(new_instruction_tokens)
 
-        process_duration = time.time() - process_start
-        print(f"Processing this example took {process_duration:.2f}s")
+        # process_duration = time.time() - process_start
+        # print(f"Processing this example took {process_duration:.2f}s")
 
     # Write not filtered instructions back to input file
     with open(input_file, "w") as f:

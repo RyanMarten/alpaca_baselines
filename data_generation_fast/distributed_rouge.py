@@ -102,14 +102,13 @@ def filter_rouge(input_file: str, output_file: str):
                 comm.send((ADD_TO_SHARD_MSG, inst), dest=shard_idx)
                 
             process_duration = time.time() - process_start
-            logger.info(f"Calculating all rouge for example {idx} took {process_duration:.2f}s")
+            logger.debug(f"Calculating all rouge for example {idx} took {process_duration:.2f}s")
             
         # Signal worker processes to finish
         for i in range(1, size):
             comm.send((TERMINATION_MSG, None), dest=i)
             logger.debug(f"Master sent termination message to process {i}")
 
-        """
         # Write results
         with open(input_file, "w") as f:
             json.dump(not_filtered, f)
@@ -123,7 +122,6 @@ def filter_rouge(input_file: str, output_file: str):
             json.dump(all_filtered, f)
 
         print_stats(filtered, not_filtered)
-        """
 
     else:
         # Worker processes
@@ -186,7 +184,7 @@ def filter_rouge(input_file: str, output_file: str):
                 
 
                 comm.send(result, dest=0)
-                logger.info(f"Process {rank} sent {result} to master")
+                logger.debug(f"Process {rank} sent {result} to master")
 
 def add_to_shard(inst: str, shard_file: str):
     # Efficient I/O rewrite of the file
