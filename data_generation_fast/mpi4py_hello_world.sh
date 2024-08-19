@@ -6,11 +6,6 @@
 #SBATCH --ntasks-per-node=2
 #SBATCH --time=00:05:00
 
-# Load any necessary modules (adjust as needed for your cluster)
-# module load python/3.8
-# module load mpi/openmpi-4.0
-
-
 # Run the MPI program
 echo "Job started at $(date)"
 ibrun ../venv/bin/python mpi4py_example.py
