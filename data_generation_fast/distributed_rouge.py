@@ -77,7 +77,7 @@ def filter_rouge(input_file: str, output_file: str):
             else:
                 not_filtered.append({"instruction": inst, "input": input_text, "output": output_text})
                 # Add to pool and update shards
-                add_to_shards(inst, shard_idx, size)
+                shard_idx = add_to_shards(inst, shard_idx, size)
                 
             process_duration = time.time() - process_start
             print(f"Processing example {idx} took {process_duration:.2f}s")
