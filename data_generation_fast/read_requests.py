@@ -45,6 +45,7 @@ def post_process_response(num_prompt_instructions, message, finish_reason):
             continue
         idx += num_prompt_instructions + 1
         splitted_data = re.split(f"{idx}\.\s+(Instruction|Input|Output):", inst)
+        pdb.set_trace()
         if len(splitted_data) != 7:
             continue
         else:
@@ -126,6 +127,72 @@ def append_to_json(file_path, new_data):
     with open(file_path, 'w') as file:
         json.dump(data, file, indent=4)
 
+def parse_response(num_prompt_instructions, message, finish_reason):
+    # original used completions API, I'm using chat completions
+    # the chat model repeates the 4. Instruction: in it's response already *about 2/3 of the time*
+    # so only add the prefix if it isn't there already
+    raw_instructions = message
+    prefix = f"{num_prompt_instructions+1}. Instruction: "
+    if raw_instructions[:len(prefix)] != prefix:
+        raw_instructions = prefix + message
+        
+    raw_instructions = re.split("###", raw_instructions)
+    instructions = []
+    failed_to_parse = []
+    truncated = []
+
+    for idx, inst in enumerate(raw_instructions):
+        # if the decoding stops due to length, the last example is likely truncated so we discard it
+        if idx == len(raw_instructions) - 1 and finish_reason == "length":
+            truncated.append(inst)
+            continue
+       
+        # parse the string to get instruction, input, and output
+        """Example of expected instruction with 7 fields
+        ['\n', 
+        'Instruction', 
+        ' Rewrite this sentence in the passive voice.\n',
+        'Input',
+        '\nThe chef prepared a stunning feast for the guests.\n',
+        'Output',
+        '\nA stunning feast was prepared for the guests by the chef.\n']
+        """
+        idx += num_prompt_instructions + 1
+        splitted_data = re.split(f"{idx}\.\s+(Instruction|Input|Output):", inst)
+        if len(splitted_data) != 7:
+            if inst.strip() != '': # the original regex can create whitespace splits
+                failed_to_parse.append(inst)
+            continue
+    
+        # succcessfully parsed string, convert into json dict
+        inst = splitted_data[2].strip()
+        input = splitted_data[4].strip()
+        input = "" if input.lower() == "<noinput>" else input
+        output = splitted_data[6].strip()
+        instructions.append({"instruction": inst, "input": input, "output": output})
+
+    return instructions, truncated, failed_to_parse
+
+def parse_all(input_file, output_parsed='parsed_instructions.json', output_failed='parsing_failed.json'):
+    instructions, truncated, failed_to_parse = [],[],[]
+
+    for message, metadata, finish_reason in response_iterator(input_file):
+        insts, truncs, fails = parse_response(len(metadata['seed_idxs']), message, finish_reason)
+        instructions.extend(insts)
+        truncated.extend(truncs)
+        failed_to_parse.extend(fails)
+
+    print(f"Successfully parsed {len(instructions)} instructions")
+    print(f"{len(truncated)+len(failed_to_parse)} failed to parse")
+    print(f"{len(truncated)} which were due to response trunctation")
+
+    with open(output_parsed, "w") as f:
+        json.dump(instructions, f)
+
+    with open(output_failed, "w") as f:
+        json.dump(truncated + failed_to_parse, f)
+    
+
 def create_dataset_from_responses(input_file, output_file='regen.json'):
     scorer = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=False)
     # pool starts out as the seed instructions
@@ -158,7 +225,7 @@ def create_dataset_from_responses(input_file, output_file='regen.json'):
 
             if max(rouge_scores) > 0.7:
                 continue
-            
+
             keep += 1
             machine_instruction_data.append(instruction_data_entry)
             # add generated instruction to pool of all instructions for rouge filtering 
@@ -177,6 +244,7 @@ def main(task, **kwargs):
     globals()[task](**kwargs)
 
 # Example usage
-# python -m read_requests create_dataset_from_responses --input_file=requests_to_parallel_process_results.jsonl
+# python -m read_requests create_dataset_from_responses --input_file=test_results.jsonl
+# python -m read_requests parse_all --input_file=test_results.jsonl
 if __name__ == "__main__":
     fire.Fire(main)
