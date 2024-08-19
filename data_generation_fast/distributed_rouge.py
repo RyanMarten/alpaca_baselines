@@ -11,7 +11,7 @@ from mpi4py import MPI
 
 TERMINATION_MSG = "TERMINATE"
 
-def filter_instructions_rouge_distributed(input_file: str, output_file: str):
+def filter_rouge(input_file: str, output_file: str):
     comm = MPI.COMM_WORLD
     rank = comm.Get_rank()
     size = comm.Get_size()
@@ -171,15 +171,6 @@ def compute_rouge_scores(shard_file: str, instruction: str, shard_instructions: 
 
     return max_score, max_instruction
 
-def update_shard(shard_file: str, instruction: str, instruction_tokens: List[str]):
-    with open(shard_file, "r") as f:
-        shard_data = json.load(f)
-    
-    shard_data.append({"instruction": instruction, "tokens": instruction_tokens})
-    
-    with open(shard_file, "w") as f:
-        json.dump(shard_data, f)
-
 def print_stats(filtered: List[Dict], not_filtered: List[Dict]):
     print("\nFiltered instruction counts:")
     print(f"  ROUGE-L similarity: {len(filtered)}")
@@ -189,3 +180,11 @@ def print_stats(filtered: List[Dict], not_filtered: List[Dict]):
     percentage_filtered = (total_filtered / total_count) * 100 if total_count > 0 else 0
     print(f"That's {percentage_filtered:.2f}% filtered out of total")
     print(f"Kept {len(not_filtered)} instructions")
+
+def main(task, **kwargs):
+    globals()[task](**kwargs)
+
+# Example usage
+# python -m distributed_rougue filter_rouge--input_file test_regen.json --output_file filtered.json
+if __name__ == "__main__":
+    fire.Fire(main)
