@@ -9,6 +9,23 @@ from typing import List, Tuple, Dict
 import subprocess
 from mpi4py import MPI
 import fire
+import logging
+
+# Configure logging
+def get_logger():
+    comm = MPI.COMM_WORLD
+    rank = comm.Get_rank()
+    node_name = os.environ.get('SLURMD_NODENAME', 'Unknown')
+    process_type = "MASTER" if rank == 0 else "WORKER"
+    logger = logging.getLogger(__name__)
+    formatter = logging.Formatter(f'%(asctime)s - {process_type} - {node_name} - %(levelname)s - %(message)s')
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+    return logger
+
+logger = get_logger()
 
 TERMINATION_MSG = "TERMINATE"
 ADD_TO_SHARD_MSG = "ADD_TO_SHARD"
@@ -21,7 +38,7 @@ def filter_rouge(input_file: str, output_file: str):
 
     if rank == 0:
         # Master process
-        print(f"Master process (rank {rank}) started. Total processes: {size}")
+        logger.info(f"Master process (rank {rank}) started. Total processes: {size}")
 
         # Initialize shards with seed tasks instructions
         intialize_start = time.time()
@@ -29,16 +46,16 @@ def filter_rouge(input_file: str, output_file: str):
         seed_instruction_data = [
         {"instruction": t["instruction"], "input": t["instances"][0]["input"], "output": t["instances"][0]["output"]}
         for t in seed_tasks]
-        print(f"Loaded {len(seed_instruction_data)} human-written seed instructions")
+        logger.info(f"Loaded {len(seed_instruction_data)} human-written seed instructions")
         
         for idx, task in enumerate(seed_instruction_data):
             inst = task['instruction']
             shard_idx = idx % (size - 1) + 1
             comm.send((ADD_TO_SHARD_MSG, inst), dest=shard_idx)
-        print(f"Sent seed instructions to shards")
+        logger.info(f"Sent seed instructions to shards")
 
         intialize_duration = time.time() - intialize_start
-        print(f"Initializing shards took {intialize_duration:.2f}s")
+        logger.info(f"Initializing shards took {intialize_duration:.2f}s")
 
         with open(input_file, "r") as f:
             instructions = json.load(f)
@@ -47,6 +64,7 @@ def filter_rouge(input_file: str, output_file: str):
         not_filtered = []
 
         for idx, item in enumerate(instructions):
+            break
             inst = item["instruction"]
             input_text = item["input"]
             output_text = item["output"]
@@ -55,7 +73,7 @@ def filter_rouge(input_file: str, output_file: str):
             # Send instruction to all worker processes
             for i in range(1, size):
                 comm.send((CALCULATE_ROUGE_MSG, inst), dest=i)
-                print(f"Master sent '{inst}' to process {i}")
+                logger.debug(f"Master sent '{inst}' to process {i}")
 
             # Collect results from worker processes
             max_scores = []
@@ -64,7 +82,7 @@ def filter_rouge(input_file: str, output_file: str):
                 result = comm.recv(source=i)
                 max_scores.append(result[0])
                 max_instructions.append(result[1])
-                print(f"Master received: {result} from process {i}")
+                logger.debug(f"Master received: {result} from process {i}")
 
             # Process results
             if max(max_scores) > 0.7:
@@ -83,12 +101,12 @@ def filter_rouge(input_file: str, output_file: str):
                 comm.send((ADD_TO_SHARD_MSG, inst), dest=shard_idx)
                 
             process_duration = time.time() - process_start
-            print(f"Processing example {idx} took {process_duration:.2f}s")
+            logger.info(f"Processing example {idx} took {process_duration:.2f}s")
 
         # Signal worker processes to finish
         for i in range(1, size):
             comm.send((TERMINATION_MSG, None), dest=i)
-            print(f"Master sent termination message to process {i}")
+            logger.debug(f"Master sent termination message to process {i}")
 
         # Write results
         with open(input_file, "w") as f:
@@ -111,7 +129,7 @@ def filter_rouge(input_file: str, output_file: str):
         # Remove shard file if it exists
         if os.path.exists(shard_file):
             os.remove(shard_file)
-            print(f"Process {rank} removed existing shard file: {shard_file}")
+            logger.info(f"Process {rank} removed existing shard file: {shard_file}")
 
         scorer = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
         last_modified = 0
@@ -121,17 +139,17 @@ def filter_rouge(input_file: str, output_file: str):
         while True:
             message = comm.recv(source=0)
             if message[0] == TERMINATION_MSG:
-                print(f"Process {rank} received termination message. Exiting.")
+                logger.info(f"Process {rank} received termination message. Exiting.")
                 break
             elif message[0] == ADD_TO_SHARD_MSG:
                 inst = message[1]
                 add_to_shard(inst, shard_file)
                 shard_instructions.append(inst)
                 shard_instruction_tokens.append(scorer._tokenizer.tokenize(inst))
-                print(f"Process {rank} added '{inst}' to shard")
+                logger.debug(f"Process {rank} added '{inst}' to shard")
             elif message[0] == CALCULATE_ROUGE_MSG:
                 inst = message[1]
-                print(f"Process {rank} received: {inst}")
+                logger.debug(f"Process {rank} received: {inst}")
                 if os.path.exists(shard_file):
                     # Check if shard file has been modified since last read
                     if os.path.getmtime(shard_file) > last_modified:
@@ -144,10 +162,10 @@ def filter_rouge(input_file: str, output_file: str):
                     result = compute_rouge_scores(inst, shard_instructions, shard_instruction_tokens, scorer)
                 else: 
                     result = (0, "")
-                    print(f"Process {rank} sent {result} to master (shard file not found)")
+                    logger.warning(f"Process {rank} sent {result} to master (shard file not found)")
 
                 comm.send(result, dest=0)
-                print(f"Process {rank} sent {result} to master")
+                logger.debug(f"Process {rank} sent {result} to master")
 
 def add_to_shard(inst: str, shard_file: str):
     # Ensure the shards directory exists
@@ -186,14 +204,14 @@ def compute_rouge_scores(instruction: str, shard_instructions: List[str], shard_
     return max_score, max_instruction
 
 def print_stats(filtered: List[Dict], not_filtered: List[Dict]):
-    print("\nFiltered instruction counts:")
-    print(f"  ROUGE-L similarity: {len(filtered)}")
+    logger.info("\nFiltered instruction counts:")
+    logger.info(f"  ROUGE-L similarity: {len(filtered)}")
     total_filtered = len(filtered)
     total_count = len(filtered) + len(not_filtered)
-    print(f"Total filtered: {total_filtered} out of {total_count}")
+    logger.info(f"Total filtered: {total_filtered} out of {total_count}")
     percentage_filtered = (total_filtered / total_count) * 100 if total_count > 0 else 0
-    print(f"That's {percentage_filtered:.2f}% filtered out of total")
-    print(f"Kept {len(not_filtered)} instructions")
+    logger.info(f"That's {percentage_filtered:.2f}% filtered out of total")
+    logger.info(f"Kept {len(not_filtered)} instructions")
 
 def main(task, **kwargs):
     globals()[task](**kwargs)
