@@ -104,7 +104,7 @@ def filter_rouge(input_file: str, output_file: str):
     else:
         # Worker processes
         shard_id = rank - 1
-        shard_file = f"shard_{shard_id}.json"
+        shard_file = f"shards/shard_{shard_id}.json"
         scorer = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
         last_modified = 0
 
