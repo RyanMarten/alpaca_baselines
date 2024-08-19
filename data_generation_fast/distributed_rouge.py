@@ -23,13 +23,17 @@ def filter_rouge(input_file: str, output_file: str):
 
         # Initialize shards with seed tasks instructions
         intialize_start = time.time()
-        with open('../seed_tasks.jsonl', 'r') as f:
-            seed_tasks = json.load(f)
+        seed_tasks = [json.loads(l) for l in open("../seed_tasks.jsonl", "r")]
+        seed_instruction_data = [
+        {"instruction": t["instruction"], "input": t["instances"][0]["input"], "output": t["instances"][0]["output"]}
+        for t in seed_tasks]
+        print(f"Loaded {len(seed_instruction_data)} human-written seed instructions")
         
         shard_idx = 0
-        for idx, task in enumerate(seed_tasks):
+        for idx, task in enumerate(seed_instruction_data):
             inst = task['instruction']
             shard_idx = add_to_shards(inst, shard_idx, size)
+        print(f"Write seed instructions to shards")
 
         intialize_duration = time.time() - intialize_start
         print(f"Initalizing shards took {intialize_duration:.2f}s")
