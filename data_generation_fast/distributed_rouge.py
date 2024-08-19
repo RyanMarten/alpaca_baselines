@@ -11,6 +11,8 @@ from mpi4py import MPI
 import fire
 
 TERMINATION_MSG = "TERMINATE"
+ADD_TO_SHARD_MSG = "ADD_TO_SHARD"
+CALCULATE_ROUGE_MSG = "CALCULATE_ROUGE"
 
 def filter_rouge(input_file: str, output_file: str):
     comm = MPI.COMM_WORLD
@@ -29,14 +31,14 @@ def filter_rouge(input_file: str, output_file: str):
         for t in seed_tasks]
         print(f"Loaded {len(seed_instruction_data)} human-written seed instructions")
         
-        shard_idx = 0
         for idx, task in enumerate(seed_instruction_data):
             inst = task['instruction']
-            shard_idx = add_to_shards(inst, shard_idx, size)
-        print(f"Write seed instructions to shards")
+            shard_idx = idx % (size - 1) + 1
+            comm.send((ADD_TO_SHARD_MSG, inst), dest=shard_idx)
+        print(f"Sent seed instructions to shards")
 
         intialize_duration = time.time() - intialize_start
-        print(f"Initalizing shards took {intialize_duration:.2f}s")
+        print(f"Initializing shards took {intialize_duration:.2f}s")
 
         with open(input_file, "r") as f:
             instructions = json.load(f)
@@ -52,7 +54,7 @@ def filter_rouge(input_file: str, output_file: str):
             process_start = time.time()
             # Send instruction to all worker processes
             for i in range(1, size):
-                comm.send(inst, dest=i)
+                comm.send((CALCULATE_ROUGE_MSG, inst), dest=i)
                 print(f"Master sent '{inst}' to process {i}")
 
             # Collect results from worker processes
@@ -77,14 +79,15 @@ def filter_rouge(input_file: str, output_file: str):
             else:
                 not_filtered.append({"instruction": inst, "input": input_text, "output": output_text})
                 # Add to pool and update shards
-                shard_idx = add_to_shards(inst, shard_idx, size)
+                shard_idx = (idx % (size - 1)) + 1
+                comm.send((ADD_TO_SHARD_MSG, inst), dest=shard_idx)
                 
             process_duration = time.time() - process_start
             print(f"Processing example {idx} took {process_duration:.2f}s")
 
         # Signal worker processes to finish
         for i in range(1, size):
-            comm.send((TERMINATION_MSG, None, None), dest=i)
+            comm.send((TERMINATION_MSG, None), dest=i)
             print(f"Master sent termination message to process {i}")
 
         # Write results
@@ -104,16 +107,30 @@ def filter_rouge(input_file: str, output_file: str):
     else:
         # Worker processes
         shard_id = rank - 1
-        shard_file = f"shards/shard_{shard_id}.json"
+        shard_file = f"$SCRATCH/rougue_shards/shard_{shard_id}.json"
+        # Remove shard file if it exists
+        if os.path.exists(shard_file):
+            os.remove(shard_file)
+            print(f"Process {rank} removed existing shard file: {shard_file}")
+
         scorer = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
         last_modified = 0
+        shard_instructions = []
+        shard_instruction_tokens = []
 
         while True:
-            inst = comm.recv(source=0)
-            if inst == TERMINATION_MSG:
+            message = comm.recv(source=0)
+            if message[0] == TERMINATION_MSG:
                 print(f"Process {rank} received termination message. Exiting.")
                 break
-            else:
+            elif message[0] == ADD_TO_SHARD_MSG:
+                inst = message[1]
+                add_to_shard(inst, shard_file)
+                shard_instructions.append(inst)
+                shard_instruction_tokens.append(scorer._tokenizer.tokenize(inst))
+                print(f"Process {rank} added '{inst}' to shard")
+            elif message[0] == CALCULATE_ROUGE_MSG:
+                inst = message[1]
                 print(f"Process {rank} received: {inst}")
                 if os.path.exists(shard_file):
                     # Check if shard file has been modified since last read
@@ -132,20 +149,16 @@ def filter_rouge(input_file: str, output_file: str):
                 comm.send(result, dest=0)
                 print(f"Process {rank} sent {result} to master")
 
-
-def add_to_shards(inst, shard_idx, size):
+def add_to_shard(inst: str, shard_file: str):
     # Ensure the shards directory exists
-    os.makedirs("shards", exist_ok=True)
+    os.makedirs(os.path.dirname(shard_file), exist_ok=True)
 
-    # Append instruction to the current shard file
-    shard_file = f"shards/shard_{shard_idx}.json"
-    
     # Create the file if it doesn't exist
     if not os.path.exists(shard_file):
         with open(shard_file, "w") as f:
             json.dump([], f)
 
-    # efficient I/O rewrite of the file
+    # Efficient I/O rewrite of the file
     with open(shard_file, "r+") as f:
         try:
             shard_instructions = json.load(f)
@@ -155,10 +168,6 @@ def add_to_shards(inst, shard_idx, size):
         f.seek(0)
         json.dump(shard_instructions, f)
         f.truncate()
-
-    # Update the last_shard index
-    next_shard_idx = (shard_idx + 1) % (size - 1)
-    return next_shard_idx
 
 def compute_rouge_scores(instruction: str, shard_instructions: List[str], shard_instruction_tokens: List[List[str]], scorer: rouge_scorer.RougeScorer) -> Tuple[float, str]:    
     max_score = 0
@@ -190,6 +199,6 @@ def main(task, **kwargs):
     globals()[task](**kwargs)
 
 # Example usage
-# python -m distributed_rougue filter_rouge--input_file test_regen.json --output_file filtered.json
+# python -m distributed_rouge filter_rouge --input_file test_regen.json --output_file filtered.json
 if __name__ == "__main__":
     fire.Fire(main)
