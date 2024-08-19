@@ -52,7 +52,7 @@ def filter_rouge(input_file: str, output_file: str):
             process_start = time.time()
             # Send instruction to all worker processes
             for i in range(1, size):
-                comm.send((inst, inst), dest=i)
+                comm.send(inst, dest=i)
                 print(f"Master sent '{inst}' to process {i}")
 
             # Collect results from worker processes
