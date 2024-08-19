@@ -12,6 +12,6 @@
 
 # Run the MPI program
 echo "Job started at $(date)"
-srun ../venv/bin/python mpi_example.py
+srun ../venv/bin/python mpi4py_example.py
 echo "Job ended at $(date), reported by $SLURMD_NODENAME with PROCID $SLURM_PROCID"
 
