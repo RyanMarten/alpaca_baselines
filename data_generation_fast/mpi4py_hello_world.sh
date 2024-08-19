@@ -3,8 +3,9 @@
 #SBATCH --job-name=mpi4py_hello_world
 #SBATCH --output=../logs/%x_%j.out
 #SBATCH --nodes=4
-#SBATCH --ntasks-per-node=2
 #SBATCH --time=00:05:00
+
+# this does work with #SBATCH --ntasks-per-node=2+
 
 # Run the MPI program
 echo "Job started at $(date)"
