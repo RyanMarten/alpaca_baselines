@@ -199,20 +199,15 @@ def add_to_shard(inst: str, shard_file: str):
         f.truncate()
 
 def compute_rouge_scores(instruction: str, shard_instructions: List[str], shard_instruction_tokens: List[List[str]], scorer: rouge_scorer.RougeScorer) -> Tuple[float, str]:    
-    max_score = 0
-    max_instruction = ""
     instruction_tokens = scorer._tokenizer.tokenize(instruction)
 
-    with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
-        scores = p.map(
-            partial(rouge_scorer._score_lcs, instruction_tokens), shard_instruction_tokens)
-
-    for i, score in enumerate(scores):
-        if score.fmeasure > max_score:
-            max_score = score.fmeasure
-            max_instruction = shard_instructions[i]
-
-    return max_score, max_instruction
+    # Use numpy for faster array operations
+    scores = np.array([rouge_scorer._score_lcs(instruction_tokens, tokens).fmeasure for tokens in shard_instruction_tokens])
+    
+    # Find the index of the maximum score
+    max_index = np.argmax(scores)
+    
+    return scores[max_index], shard_instructions[max_index]
 
 def print_stats(filtered: List[Dict], not_filtered: List[Dict]):
     logger.info("\nFiltered instruction counts:")
