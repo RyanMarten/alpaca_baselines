@@ -8,6 +8,7 @@ import time
 from typing import List, Tuple, Dict
 import subprocess
 from mpi4py import MPI
+import fire
 
 TERMINATION_MSG = "TERMINATE"
 
