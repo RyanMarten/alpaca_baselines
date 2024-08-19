@@ -43,10 +43,13 @@ def filter_rouge(input_file: str, output_file: str):
         # Initialize shards with seed tasks instructions
         intialize_start = time.time()
         # seed_tasks = [json.loads(l) for l in open("../seed_tasks.jsonl", "r")]
+        # seed_instruction_data = [
+        # {"instruction": t["instruction"], "input": t["instances"][0]["input"], "output": t["instances"][0]["output"]}
+        # for t in seed_tasks]
         # This as a test for timing and bottlenecks
         seed_tasks = json.load(open("regen.json", "r"))
         seed_instruction_data = [
-        {"instruction": t["instruction"], "input": t["instances"][0]["input"], "output": t["instances"][0]["output"]}
+        {"instruction": t["instruction"], "input": t["input"], "output": t["output"]}
         for t in seed_tasks]
         logger.info(f"Loaded {len(seed_instruction_data)} human-written seed instructions")
         
