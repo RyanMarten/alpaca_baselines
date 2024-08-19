@@ -125,6 +125,8 @@ def filter_rouge(input_file: str, output_file: str):
 
     else:
         # Worker processes
+        logging.info(f"I have {multiprocessing.cpu_count()} cores")
+
         shard_id = rank - 1
         shard_file = f"{os.environ.get('SCRATCH', '.')}/rougue_shards/shard_{shard_id}.json"
         # Remove shard file if it exists
@@ -159,22 +161,27 @@ def filter_rouge(input_file: str, output_file: str):
             elif message[0] == CALCULATE_ROUGE_MSG:
                 inst = message[1]
                 logger.debug(f"Process {rank} received: {inst}")
-                start_time = time.time()
+                
                 if os.path.exists(shard_file):
                     # Check if shard file has been modified since last read
                     if os.path.getmtime(shard_file) > last_modified:
                         last_modified = os.path.getmtime(shard_file)
                         # reload file and compute tokens for it
+                        update_start = time.time()
                         with open(shard_file, "r") as f:
                             shard_instructions = json.load(f)
                         shard_instruction_tokens = [scorer._tokenizer.tokenize(shard_inst) for shard_inst in shard_instructions]
+                        update_duration = time.time() - update_start
+                        logger.info(f"Process {rank} updated tokenizer in {update_duration:.4f} seconds")
                     # then compute rogue scores
+                    start_time = time.time()
                     result = compute_rouge_scores(inst, shard_instructions, shard_instruction_tokens, scorer)
+                    duration = time.time() - start_time
+                    logger.info(f"Process {rank} calculated ROUGE for example in {duration:.4f} seconds")
                 else: 
                     result = (0, "")
                     logger.warning(f"Process {rank} sent {result} to master (shard file not found)")
-                duration = time.time() - start_time
-                logger.info(f"Process {rank} calculated ROUGE for example in {duration:.4f} seconds")
+                
 
                 comm.send(result, dest=0)
                 logger.debug(f"Process {rank} sent {result} to master")
