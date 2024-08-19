@@ -68,9 +68,8 @@ def filter_rouge(input_file: str, output_file: str):
         last_1k_log_time = time.time()
         for idx, item in enumerate(instructions):
             if idx % 1000 == 0 and idx > 0:
-                if 'last_log_time' in locals():
-                    elapsed_time = time.time() - last_1k_log_time
-                    logger.info(f"Processed {idx} instructions. Time since last 1000: {elapsed_time:.2f}s")
+                elapsed_time = time.time() - last_1k_log_time
+                logger.info(f"Processed {idx} instructions. Time since last 1000: {elapsed_time:.2f}s")
                 last_1k_log_time = time.time()
             inst = item["instruction"]
             input_text = item["input"]
@@ -108,7 +107,7 @@ def filter_rouge(input_file: str, output_file: str):
                 comm.send((ADD_TO_SHARD_MSG, inst), dest=shard_idx)
                 
             process_duration = time.time() - process_start
-            logger.info(f"Calculating all rouge for example {idx} took {process_duration:.2f}s")
+            logger.debug(f"Calculating all rouge for example {idx} took {process_duration:.2f}s")
             
         # Signal worker processes to finish
         for i in range(1, size):
