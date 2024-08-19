@@ -63,8 +63,8 @@ def filter_rouge(input_file: str, output_file: str):
         filtered = []
         not_filtered = []
 
+        """
         for idx, item in enumerate(instructions):
-            break
             inst = item["instruction"]
             input_text = item["input"]
             output_text = item["output"]
@@ -121,15 +121,22 @@ def filter_rouge(input_file: str, output_file: str):
             json.dump(all_filtered, f)
 
         print_stats(filtered, not_filtered)
+        """
 
     else:
         # Worker processes
         shard_id = rank - 1
-        shard_file = f"$SCRATCH/rougue_shards/shard_{shard_id}.json"
+        shard_file = f"{os.environ.get('SCRATCH', '.')}/rougue_shards/shard_{shard_id}.json"
         # Remove shard file if it exists
         if os.path.exists(shard_file):
             os.remove(shard_file)
             logger.info(f"Process {rank} removed existing shard file: {shard_file}")
+        
+        # Create new shard file
+        os.makedirs(os.path.dirname(shard_file), exist_ok=True)
+        logger.info(f"Created new shard file: {shard_file}")
+        with open(shard_file, "w") as f:
+            json.dump([], f)
 
         scorer = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
         last_modified = 0
@@ -168,14 +175,6 @@ def filter_rouge(input_file: str, output_file: str):
                 logger.debug(f"Process {rank} sent {result} to master")
 
 def add_to_shard(inst: str, shard_file: str):
-    # Ensure the shards directory exists
-    os.makedirs(os.path.dirname(shard_file), exist_ok=True)
-
-    # Create the file if it doesn't exist
-    if not os.path.exists(shard_file):
-        with open(shard_file, "w") as f:
-            json.dump([], f)
-
     # Efficient I/O rewrite of the file
     with open(shard_file, "r+") as f:
         try:
