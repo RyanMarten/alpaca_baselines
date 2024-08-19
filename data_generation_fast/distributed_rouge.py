@@ -150,10 +150,12 @@ def filter_rouge(input_file: str, output_file: str):
                 break
             elif message[0] == ADD_TO_SHARD_MSG:
                 inst = message[1]
+                start_time = time.time()
                 add_to_shard(inst, shard_file)
                 shard_instructions.append(inst)
                 shard_instruction_tokens.append(scorer._tokenizer.tokenize(inst))
-                logger.debug(f"Process {rank} added '{inst}' to shard")
+                duration = time.time() - start_time
+                logger.info(f"Process {rank} added '{inst}' to shard in {duration:.4f} seconds")
             elif message[0] == CALCULATE_ROUGE_MSG:
                 inst = message[1]
                 logger.debug(f"Process {rank} received: {inst}")
