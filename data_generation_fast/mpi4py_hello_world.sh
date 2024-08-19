@@ -10,8 +10,9 @@
 # module load python/3.8
 # module load mpi/openmpi-4.0
 
+
 # Run the MPI program
 echo "Job started at $(date)"
-srun ../venv/bin/python mpi4py_example.py
+ibrun ../venv/bin/python mpi4py_example.py
 echo "Job ended at $(date), reported by $SLURMD_NODENAME with PROCID $SLURM_PROCID"
 
