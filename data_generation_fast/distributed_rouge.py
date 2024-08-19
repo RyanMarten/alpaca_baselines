@@ -103,10 +103,14 @@ def filter_rouge(input_file: str, output_file: str):
             process_duration = time.time() - process_start
             logger.info(f"Processing example {idx} took {process_duration:.2f}s")
 
+        """
+            
         # Signal worker processes to finish
         for i in range(1, size):
             comm.send((TERMINATION_MSG, None), dest=i)
             logger.debug(f"Master sent termination message to process {i}")
+
+        """
 
         # Write results
         with open(input_file, "w") as f:
