@@ -225,15 +225,20 @@ def filter_instructions_rouge(input_file, output_file):
 
         # computing similarity with the pre-tokenzied instructions
         new_instruction_tokens = scorer._tokenizer.tokenize(inst)
-        with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
-            rouge_scores = p.map(
-                partial(rouge_scorer._score_lcs, new_instruction_tokens),
-                current_pool_instructions,
-            )
-        rouge_scores = [score.fmeasure for score in rouge_scores]
-        most_similar_instructions = {
-            current_pool_instructions[i]: rouge_scores[i] for i in np.argsort(rouge_scores)[-10:][::-1]
-        }
+
+        # EXTREMELY SLOW
+        # with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
+        #     rouge_scores = p.map(
+        #         partial(rouge_scorer._score_lcs, new_instruction_tokens),
+        #         current_pool_instruction_tokens,
+        #     )
+        # rouge_scores = [score.fmeasure for score in rouge_scores]
+        # most_similar_instructions = {
+        #     current_pool_instructions[i]: rouge_scores[i] for i in np.argsort(rouge_scores)[-10:][::-1]
+        # }
+
+        # Use numpy for faster array operations
+        rouge_scores = np.array([rouge_scorer._score_lcs(new_instruction_tokens, tokens).fmeasure for tokens in current_pool_instruction_tokens])
 
         if max(rouge_scores) > 0.7:
             filtered.append({"instruction": inst, "input": input_text, "output": output_text, "filtered_reason": "rouge_similarity"})
