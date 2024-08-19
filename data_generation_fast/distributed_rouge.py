@@ -125,7 +125,7 @@ def filter_rouge(input_file: str, output_file: str):
 
     else:
         # Worker processes
-        logging.info(f"I have {multiprocessing.cpu_count()} cores")
+        logger.info(f"I have {multiprocessing.cpu_count()} cores")
 
         shard_id = rank - 1
         shard_file = f"{os.environ.get('SCRATCH', '.')}/rougue_shards/shard_{shard_id}.json"
