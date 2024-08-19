@@ -23,6 +23,8 @@ def get_logger():
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
+    # Disable propagation to avoid double logging
+    logger.propagate = False
     return logger
 
 logger = get_logger()
@@ -172,19 +174,19 @@ def filter_rouge(input_file: str, output_file: str):
                             shard_instructions = json.load(f)
                         shard_instruction_tokens = [scorer._tokenizer.tokenize(shard_inst) for shard_inst in shard_instructions]
                         update_duration = time.time() - update_start
-                        logger.info(f"Process {rank} updated tokenizer in {update_duration:.4f} seconds")
+                        logger.debug(f"Process {rank} updated tokenizer in {update_duration:.4f} seconds")
                     # then compute rogue scores
                     start_time = time.time()
                     result = compute_rouge_scores(inst, shard_instructions, shard_instruction_tokens, scorer)
                     duration = time.time() - start_time
-                    logger.info(f"Process {rank} calculated ROUGE for example in {duration:.4f} seconds")
+                    logger.debug(f"Process {rank} calculated ROUGE for example in {duration:.4f} seconds")
                 else: 
                     result = (0, "")
                     logger.warning(f"Process {rank} sent {result} to master (shard file not found)")
                 
 
                 comm.send(result, dest=0)
-                logger.debug(f"Process {rank} sent {result} to master")
+                logger.info(f"Process {rank} sent {result} to master")
 
 def add_to_shard(inst: str, shard_file: str):
     # Efficient I/O rewrite of the file
