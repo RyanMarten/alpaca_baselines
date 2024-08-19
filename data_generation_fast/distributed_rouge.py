@@ -65,7 +65,13 @@ def filter_rouge(input_file: str, output_file: str):
         filtered = []
         not_filtered = []
 
+        last_1k_log_time = time.time()
         for idx, item in enumerate(instructions):
+            if idx % 1000 == 0 and idx > 0:
+                if 'last_log_time' in locals():
+                    elapsed_time = time.time() - last_1k_log_time
+                    logger.info(f"Processed {idx} instructions. Time since last 1000: {elapsed_time:.2f}s")
+                last_1k_log_time = time.time()
             inst = item["instruction"]
             input_text = item["input"]
             output_text = item["output"]
