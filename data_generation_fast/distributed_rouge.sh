@@ -4,7 +4,7 @@
 #SBATCH --output=../logs/%x_%j.out
 #SBATCH --nodes=64
 #SBATCH --ntasks-per-node=1
-#SBATCH --time=00:05:00
+#SBATCH --time=00:20:00
 
 # Run the MPI program
 echo "Job started at $(date)"
