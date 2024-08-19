@@ -121,7 +121,17 @@ def filter_rouge(input_file: str, output_file: str):
         with open(output_file, "w") as f:
             json.dump(all_filtered, f)
 
-        print_stats(filtered, not_filtered)
+
+        # Calculate and log total time
+        total_duration = time.time() - intialize_start
+        logger.info(f"Total processing time: {total_duration:.2f}s")
+        
+        # Log additional statistics
+        logger.info(f"Total instructions processed: {len(filtered) + len(not_filtered)}")
+        logger.info(f"Instructions filtered (ROUGE-L): {len(filtered)}")
+        logger.info(f"Instructions kept: {len(not_filtered)}")
+        logger.info(f"Filtering rate: {len(filtered) / (len(filtered) + len(not_filtered)) * 100:.2f}%")
+        logger.info(f"Average processing time per instruction: {total_duration / (len(filtered) + len(not_filtered)):.4f}s")
 
     else:
         # Worker processes
@@ -208,16 +218,6 @@ def compute_rouge_scores(instruction: str, shard_instructions: List[str], shard_
     max_index = np.argmax(scores)
     
     return scores[max_index], shard_instructions[max_index]
-
-def print_stats(filtered: List[Dict], not_filtered: List[Dict]):
-    logger.info("\nFiltered instruction counts:")
-    logger.info(f"  ROUGE-L similarity: {len(filtered)}")
-    total_filtered = len(filtered)
-    total_count = len(filtered) + len(not_filtered)
-    logger.info(f"Total filtered: {total_filtered} out of {total_count}")
-    percentage_filtered = (total_filtered / total_count) * 100 if total_count > 0 else 0
-    logger.info(f"That's {percentage_filtered:.2f}% filtered out of total")
-    logger.info(f"Kept {len(not_filtered)} instructions")
 
 def main(task, **kwargs):
     globals()[task](**kwargs)
