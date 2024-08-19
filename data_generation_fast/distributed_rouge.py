@@ -42,14 +42,9 @@ def filter_rouge(input_file: str, output_file: str):
 
         # Initialize shards with seed tasks instructions
         intialize_start = time.time()
-        # seed_tasks = [json.loads(l) for l in open("../seed_tasks.jsonl", "r")]
-        # seed_instruction_data = [
-        # {"instruction": t["instruction"], "input": t["instances"][0]["input"], "output": t["instances"][0]["output"]}
-        # for t in seed_tasks]
-        # This as a test for timing and bottlenecks
-        seed_tasks = json.load(open("regen.json", "r"))
+        seed_tasks = [json.loads(l) for l in open("../seed_tasks.jsonl", "r")]
         seed_instruction_data = [
-        {"instruction": t["instruction"], "input": t["input"], "output": t["output"]}
+        {"instruction": t["instruction"], "input": t["instances"][0]["input"], "output": t["instances"][0]["output"]}
         for t in seed_tasks]
         logger.info(f"Loaded {len(seed_instruction_data)} human-written seed instructions")
         
@@ -68,7 +63,6 @@ def filter_rouge(input_file: str, output_file: str):
         filtered = []
         not_filtered = []
 
-        """
         for idx, item in enumerate(instructions):
             inst = item["instruction"]
             input_text = item["input"]
@@ -106,9 +100,7 @@ def filter_rouge(input_file: str, output_file: str):
                 comm.send((ADD_TO_SHARD_MSG, inst), dest=shard_idx)
                 
             process_duration = time.time() - process_start
-            logger.info(f"Processing example {idx} took {process_duration:.2f}s")
-
-        """
+            logger.info(f"Calculating all rouge for example {idx} took {process_duration:.2f}s")
             
         # Signal worker processes to finish
         for i in range(1, size):
@@ -116,7 +108,6 @@ def filter_rouge(input_file: str, output_file: str):
             logger.debug(f"Master sent termination message to process {i}")
 
         """
-
         # Write results
         with open(input_file, "w") as f:
             json.dump(not_filtered, f)
@@ -139,11 +130,11 @@ def filter_rouge(input_file: str, output_file: str):
         # Remove shard file if it exists
         if os.path.exists(shard_file):
             os.remove(shard_file)
-            logger.info(f"Process {rank} removed existing shard file: {shard_file}")
+            logger.debug(f"Process {rank} removed existing shard file: {shard_file}")
         
         # Create new shard file
         os.makedirs(os.path.dirname(shard_file), exist_ok=True)
-        logger.info(f"Created new shard file: {shard_file}")
+        logger.debug(f"Created new shard file: {shard_file}")
         with open(shard_file, "w") as f:
             json.dump([], f)
 
@@ -155,7 +146,7 @@ def filter_rouge(input_file: str, output_file: str):
         while True:
             message = comm.recv(source=0)
             if message[0] == TERMINATION_MSG:
-                logger.info(f"Process {rank} received termination message. Exiting.")
+                logger.debug(f"Process {rank} received termination message. Exiting.")
                 break
             elif message[0] == ADD_TO_SHARD_MSG:
                 inst = message[1]
@@ -168,6 +159,7 @@ def filter_rouge(input_file: str, output_file: str):
             elif message[0] == CALCULATE_ROUGE_MSG:
                 inst = message[1]
                 logger.debug(f"Process {rank} received: {inst}")
+                start_time = time.time()
                 if os.path.exists(shard_file):
                     # Check if shard file has been modified since last read
                     if os.path.getmtime(shard_file) > last_modified:
@@ -181,6 +173,8 @@ def filter_rouge(input_file: str, output_file: str):
                 else: 
                     result = (0, "")
                     logger.warning(f"Process {rank} sent {result} to master (shard file not found)")
+                duration = time.time() - start_time
+                logger.info(f"Process {rank} calculated ROUGE for example in {duration:.4f} seconds")
 
                 comm.send(result, dest=0)
                 logger.debug(f"Process {rank} sent {result} to master")
