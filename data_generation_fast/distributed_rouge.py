@@ -9,21 +9,7 @@ from typing import List, Tuple, Dict
 import subprocess
 from mpi4py import MPI
 
-def launch_slurm_job(num_nodes: int = 64):
-    slurm_script = f"""#!/bin/bash
-#SBATCH --nodes={num_nodes}
-#SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=1
-#SBATCH --time=24:00:00
-#SBATCH --job-name=rouge_filter
-#SBATCH --output=rouge_filter_%j.out
-
-srun python -m create_dataset filter_instructions_rouge_distributed
-"""
-    with open("slurm_job.sh", "w") as f:
-        f.write(slurm_script)
-    
-    subprocess.run(["sbatch", "slurm_job.sh"])
+TERMINATION_MSG = "TERMINATE"
 
 def filter_instructions_rouge_distributed(input_file: str, output_file: str):
     comm = MPI.COMM_WORLD
@@ -32,20 +18,26 @@ def filter_instructions_rouge_distributed(input_file: str, output_file: str):
 
     if rank == 0:
         # Master process
+        print(f"Master process (rank {rank}) started. Total processes: {size}")
+
+        # Initialize shards with seed tasks instructions
+        intialize_start = time.time()
+        with open('../seed_tasks.jsonl', 'r') as f:
+            seed_tasks = json.load(f)
+        
+        shard_idx = 0
+        for idx, task in enumerate(seed_tasks):
+            inst = task['instruction']
+            shard_idx = add_to_shards(inst, shard_idx, size)
+
+        intialize_duration = time.time() - intialize_start
+        print(f"Initalizing shards took {intialize_duration:.2f}s")
+
         with open(input_file, "r") as f:
             instructions = json.load(f)
 
-        # Create shards
-        shards = np.array_split(instructions, size - 1)
-        for i, shard in enumerate(shards):
-            with open(f"shard_{i}.json", "w") as f:
-                json.dump(shard.tolist(), f)
-
-        scorer = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
-
         filtered = []
         not_filtered = []
-        current_pool_instructions = []
 
         for idx, item in enumerate(instructions):
             inst = item["instruction"]
@@ -53,12 +45,10 @@ def filter_instructions_rouge_distributed(input_file: str, output_file: str):
             output_text = item["output"]
 
             process_start = time.time()
-
-            new_instruction_tokens = scorer._tokenizer.tokenize(inst)
-            
             # Send instruction to all worker processes
             for i in range(1, size):
-                comm.send((inst, new_instruction_tokens), dest=i)
+                comm.send((inst, inst), dest=i)
+                print(f"Master sent '{inst}' to process {i}")
 
             # Collect results from worker processes
             max_scores = []
@@ -67,9 +57,10 @@ def filter_instructions_rouge_distributed(input_file: str, output_file: str):
                 result = comm.recv(source=i)
                 max_scores.append(result[0])
                 max_instructions.append(result[1])
+                print(f"Master received: {result} from process {i}")
 
             # Process results
-            if max(max_scores) >= 0.7:
+            if max(max_scores) > 0.7:
                 filtered.append({
                     "instruction": inst,
                     "input": input_text,
@@ -81,16 +72,15 @@ def filter_instructions_rouge_distributed(input_file: str, output_file: str):
             else:
                 not_filtered.append({"instruction": inst, "input": input_text, "output": output_text})
                 # Add to pool and update shards
-                current_pool_instructions.append(inst)
-                shard_to_update = idx % (size - 1)
-                comm.send(("update", inst, new_instruction_tokens), dest=shard_to_update + 1)
-
+                add_to_shards(inst, shard_idx, size)
+                
             process_duration = time.time() - process_start
             print(f"Processing example {idx} took {process_duration:.2f}s")
 
         # Signal worker processes to finish
         for i in range(1, size):
-            comm.send(("finish", None, None), dest=i)
+            comm.send((TERMINATION_MSG, None, None), dest=i)
+            print(f"Master sent termination message to process {i}")
 
         # Write results
         with open(input_file, "w") as f:
@@ -111,38 +101,73 @@ def filter_instructions_rouge_distributed(input_file: str, output_file: str):
         shard_id = rank - 1
         shard_file = f"shard_{shard_id}.json"
         scorer = rouge_scorer.RougeScorer(['rougeL'], use_stemmer=True)
+        last_modified = 0
 
         while True:
-            data = comm.recv(source=0)
-            if data[0] == "finish":
+            inst = comm.recv(source=0)
+            if inst == TERMINATION_MSG:
+                print(f"Process {rank} received termination message. Exiting.")
                 break
-            elif data[0] == "update":
-                update_shard(shard_file, data[1], data[2])
             else:
-                instruction, instruction_tokens = data
-                result = compute_rouge_scores(shard_file, instruction, instruction_tokens, scorer)
+                print(f"Process {rank} received: {inst}")
+                if os.path.exists(shard_file):
+                    # Check if shard file has been modified since last read
+                    if os.path.getmtime(shard_file) > last_modified:
+                        last_modified = os.path.getmtime(shard_file)
+                        # reload file and compute tokens for it
+                        with open(shard_file, "r") as f:
+                            shard_instructions = json.load(f)
+                        shard_instruction_tokens = [scorer._tokenizer.tokenize(shard_inst) for shard_inst in shard_instructions]
+                    # then compute rogue scores
+                    result = compute_rouge_scores(shard_file, inst, shard_instruction_tokens, scorer)
+                else: 
+                    result = (0, "")
+                    print(f"Process {rank} sent {result} to master (shard file not found)")
+
                 comm.send(result, dest=0)
+                print(f"Process {rank} sent {result} to master")
 
-def compute_rouge_scores(shard_file: str, instruction: str, instruction_tokens: List[str], scorer: rouge_scorer.RougeScorer) -> Tuple[float, str]:
-    if not os.path.exists(shard_file):
-        return 0, ""
 
-    with open(shard_file, "r") as f:
-        shard_data = json.load(f)
+def add_to_shards(inst, shard_idx, size):
+    # Ensure the shards directory exists
+    os.makedirs("shards", exist_ok=True)
+
+    # Append instruction to the current shard file
+    shard_file = f"shards/shard_{shard_idx}.json"
     
+    # Create the file if it doesn't exist
+    if not os.path.exists(shard_file):
+        with open(shard_file, "w") as f:
+            json.dump([], f)
+
+    # efficient I/O rewrite of the file
+    with open(shard_file, "r+") as f:
+        try:
+            shard_instructions = json.load(f)
+        except json.JSONDecodeError:
+            shard_instructions = []
+        shard_instructions.append(inst)
+        f.seek(0)
+        json.dump(shard_instructions, f)
+        f.truncate()
+
+    # Update the last_shard index
+    next_shard_idx = (shard_idx + 1) % (size - 1)
+    return next_shard_idx
+
+def compute_rouge_scores(shard_file: str, instruction: str, shard_instructions: List[str], shard_instruction_tokens: List[List[str]], scorer: rouge_scorer.RougeScorer) -> Tuple[float, str]:    
     max_score = 0
     max_instruction = ""
+    instruction_tokens = scorer._tokenizer.tokenize(instruction)
 
     with multiprocessing.Pool(multiprocessing.cpu_count()) as p:
         scores = p.map(
-            partial(rouge_scorer._score_lcs, instruction_tokens),
-            [scorer._tokenizer.tokenize(item["instruction"]) for item in shard_data]
-        )
+            partial(rouge_scorer._score_lcs, instruction_tokens), shard_instruction_tokens)
 
     for i, score in enumerate(scores):
         if score.fmeasure > max_score:
             max_score = score.fmeasure
-            max_instruction = shard_data[i]["instruction"]
+            max_instruction = shard_instructions[i]
 
     return max_score, max_instruction
 
