@@ -126,7 +126,7 @@ def parse_all_responses(input_file, output_file_parsed, output_file_failed):
     with open(output_file_failed, "w") as f:
         json.dump(truncated + failed_to_parse, f)
 
-def filter_instructions(input_file, output_file):
+def filter_instructions_heuristics(input_file, output_file):
     too_short = []
     too_long = []
     blacklisted = []
@@ -206,6 +206,9 @@ def filter_instructions(input_file, output_file):
     percentage_filtered = (total_filtered / total_count) * 100 if total_count > 0 else 0
     print(f"That's {percentage_filtered:.2f}% filtered out of total")
 
+"""
+NOTE: This is EXTREMELY slow
+"""
 def filter_instructions_rouge(input_file, output_file):
     scorer = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=False)
     # pool starts out as the seed instructions
@@ -276,7 +279,7 @@ def main(task, **kwargs):
 
 # Example usage
 # python -m create_dataset parse_all_responses --input_file test_results.jsonl --output_file_parsed test_parsed.json --output_file_failed test_parsing_failed.json
-# python -m create_dataset filter_instructions --input_file regen.json --output_file filtered.json 
+# python -m create_dataset filter_instructions_heuristics --input_file regen.json --output_file filtered.json 
 # python -m create_dataset filter_instructions_rouge --input_file test_regen.json --output_file filtered.json 
 if __name__ == "__main__":
     fire.Fire(main)
