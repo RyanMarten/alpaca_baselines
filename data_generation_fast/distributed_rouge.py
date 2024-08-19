@@ -124,7 +124,7 @@ def filter_rouge(input_file: str, output_file: str):
                             shard_instructions = json.load(f)
                         shard_instruction_tokens = [scorer._tokenizer.tokenize(shard_inst) for shard_inst in shard_instructions]
                     # then compute rogue scores
-                    result = compute_rouge_scores(shard_file, inst, shard_instruction_tokens, scorer)
+                    result = compute_rouge_scores(inst, shard_instructions, shard_instruction_tokens, scorer)
                 else: 
                     result = (0, "")
                     print(f"Process {rank} sent {result} to master (shard file not found)")
@@ -160,7 +160,7 @@ def add_to_shards(inst, shard_idx, size):
     next_shard_idx = (shard_idx + 1) % (size - 1)
     return next_shard_idx
 
-def compute_rouge_scores(shard_file: str, instruction: str, shard_instructions: List[str], shard_instruction_tokens: List[List[str]], scorer: rouge_scorer.RougeScorer) -> Tuple[float, str]:    
+def compute_rouge_scores(instruction: str, shard_instructions: List[str], shard_instruction_tokens: List[List[str]], scorer: rouge_scorer.RougeScorer) -> Tuple[float, str]:    
     max_score = 0
     max_instruction = ""
     instruction_tokens = scorer._tokenizer.tokenize(instruction)
