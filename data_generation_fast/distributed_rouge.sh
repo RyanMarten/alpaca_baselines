@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --partition=development
+#SBATCH --partition=normal
 #SBATCH --job-name=distributed_rouge
 #SBATCH --output=../logs/%x_%j.out
 #SBATCH --nodes=4
