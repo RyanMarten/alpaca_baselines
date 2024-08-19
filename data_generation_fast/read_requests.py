@@ -10,6 +10,7 @@ from functools import partial
 import numpy as np
 import time
 import json
+import fire
 
 def response_iterator(responses_filepath):
     with open(responses_filepath) as file_in:
@@ -125,12 +126,8 @@ def append_to_json(file_path, new_data):
     with open(file_path, 'w') as file:
         json.dump(data, file, indent=4)
 
-if __name__ == "__main__":
+def create_dataset_from_responses(input_file, output_file='regen.json'):
     scorer = rouge_scorer.RougeScorer(["rougeL"], use_stemmer=False)
-
-    with open('regen.json', "w") as f:
-        f.write('[]')
-
     # pool starts out as the seed instructions
     current_pool_instructions = load_seed_instructions()
     num_seed_instructions = len(current_pool_instructions)
@@ -139,8 +136,7 @@ if __name__ == "__main__":
     
     print(f"Using {multiprocessing.cpu_count()} CPU threads for major bottleneck of ROGUE-L")
 
-    responses_filepath = 'test_requests_to_parallel_process_results.jsonl'
-    for message, metadata, finish_reason in response_iterator(responses_filepath):
+    for message, metadata, finish_reason in response_iterator(input_file):
         instruction_data = post_process_response(len(metadata['seed_idxs']), message, finish_reason)
         
         process_start = time.time()
@@ -159,10 +155,10 @@ if __name__ == "__main__":
             most_similar_instructions = {
                 current_pool_instructions[i]: rouge_scores[i] for i in np.argsort(rouge_scores)[-10:][::-1]
             }
+
             if max(rouge_scores) > 0.7:
                 continue
-   
-           
+            
             keep += 1
             machine_instruction_data.append(instruction_data_entry)
             # add generated instruction to pool of all instructions for rouge filtering 
@@ -173,5 +169,14 @@ if __name__ == "__main__":
         process_duration = time.time() - process_start
         print(f"Processing request idx {metadata['request_idx']} took {process_duration:.2f}s")
         print(f"Generated {total} instructions, kept {keep} instructions")
-        with open('regen.json', "w") as f:
+        with open(output_file, "w") as f:
             json.dump(machine_instruction_data, f)
+
+
+def main(task, **kwargs):
+    globals()[task](**kwargs)
+
+# Example usage
+# python -m read_requests create_dataset_from_responses --input_file=requests_to_parallel_process_results.jsonl
+if __name__ == "__main__":
+    fire.Fire(main)

@@ -1,6 +1,7 @@
 import json
 import random
 import re
+import fire
 
 def encode_prompt(prompt_instructions, prompt_file='../prompt.txt'):
     """Encode multiple prompt instructions into a single string."""
@@ -65,5 +66,10 @@ def create_instruction_requests(
             json_string = json.dumps(job)
             f.write(json_string + "\n")
 
+def main(task, **kwargs):
+    globals()[task](**kwargs)
+
+# Example usage
+# python -m create_requests create_instruction_requests --num_instructions_to_generate=52000
 if __name__ == "__main__":
-    create_instruction_requests()
+    fire.Fire(main)
