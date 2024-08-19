@@ -97,8 +97,8 @@ def filter_rouge(input_file: str, output_file: str):
                     "input": input_text,
                     "output": output_text,
                     "filtered_reason": "rouge_similarity",
-                    "score": max_scores[np.argmax(max_scores)],
-                    "similar_instruction": max_instructions[np.argmax(max_scores)]
+                    "most_similar_score": max_scores[np.argmax(max_scores)],
+                    "most_similar_instruction": max_instructions[np.argmax(max_scores)]
                 })
             else:
                 not_filtered.append({"instruction": inst, "input": input_text, "output": output_text})
