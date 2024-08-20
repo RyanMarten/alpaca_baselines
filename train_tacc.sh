@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --partition=gpu-a100
-#SBATCH --job-name=dcft-alpaca-reproduction-tacc-8xA100-40GB
+#SBATCH --job-name=dcft-alpaca-regeneration-gp4o-10k-sft-tacc-8xA100-40GB
 #SBATCH --nodes=4
 #SBATCH --ntasks-per-node=1
 #SBATCH -t 12:00:00
@@ -14,7 +14,6 @@ echo "SLURM_JOB_NODELIST: $SLURM_JOB_NODELIST"
 echo "SLURM_NNODES: $SLURM_NNODES"
 
 # Networking between nodes to master node
-
 # From sbatch docs: "Slurm runs a single copy of the batch script on the first node in the set of allocated nodes"
 # This first node will be the master node and we will set an environment variable for all the nodes to use
 # Therefore this will show PROCID 0 and the ip address of the master node
