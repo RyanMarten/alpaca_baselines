@@ -33,10 +33,14 @@ srun bash -c 'echo "Hello world from $(hostname) (SLURM_PROCID: $SLURM_PROCID). 
 export GPUS_PER_NODE=2
 export OUTPUT_DIR=$WORK/dcft/checkpoints/$SLURM_JOB_NAME
 export MODEL_PATH=$WORK/dcft/llama-7b
+export DATA_PATH=./data_generation_fast/regen.json
+# export DATA_PATH=./alpaca_data.json
+
 mkdir -p $OUTPUT_DIR
 echo "GPUS_PER_NODE: $GPUS_PER_NODE"
 echo "OUTPUT_DIR: $OUTPUT_DIR"
 echo "MODEL_PATH: $MODEL_PATH"
+echo "DATA_PATH: $MODEL_PATH"
 
 # Ensure torch and cuda and devices are available
 srun $WORK/dcft/stanford_alpaca/venv/bin/python -c "import torch; print('Torch version:', torch.__version__)"
@@ -56,7 +60,7 @@ srun ./venv/bin/torchrun \
     --master_port=$MASTER_PORT \
     train.py \
     --model_name_or_path $MODEL_PATH \
-    --data_path ./alpaca_data.json \
+    --data_path $DATA_PATH \
     --bf16 True \
     --output_dir $OUTPUT_DIR \
     --include_num_input_tokens_seen \
