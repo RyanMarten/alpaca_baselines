@@ -9,3 +9,4 @@ sentencepiece
 tokenizers>=0.13.3
 wandb
 nltk
+accelerate
