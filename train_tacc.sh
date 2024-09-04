@@ -29,6 +29,7 @@ echo "$(scontrol show hostname $SLURM_JOB_NODELIST)"
 srun bash -c 'echo "Hello world from $(hostname) (SLURM_PROCID: $SLURM_PROCID). I see MASTER_ADDR:MASTER_PORT as $MASTER_ADDR:$MASTER_PORT"'
 
 # Additional environment variables
+export WANDB_PROJECT=dcft
 export GPUS_PER_NODE=2
 export OUTPUT_DIR=$WORK/dcft/checkpoints/$SLURM_JOB_NAME
 export MODEL_PATH=$WORK/dcft/llama-7b
@@ -36,6 +37,7 @@ export DATA_PATH=./data_generation_fast/regen.json
 # export DATA_PATH=./alpaca_data.json
 
 mkdir -p $OUTPUT_DIR
+echo "WANDB_PROJECT: $WANDB_PROJECT"
 echo "GPUS_PER_NODE: $GPUS_PER_NODE"
 echo "OUTPUT_DIR: $OUTPUT_DIR"
 echo "MODEL_PATH: $MODEL_PATH"
