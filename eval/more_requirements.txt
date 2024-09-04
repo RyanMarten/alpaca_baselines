@@ -1,1 +1,6 @@
 alpaca-eval
+torch
+transformers
+peft
+sentencepiece
+protobuf
