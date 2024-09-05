@@ -1,6 +1,6 @@
 
 MODEL_PATH=/home/ec2-user/checkpoints/llama-7b
-OUTPUT_DIR="dcft-alpaca-reproduction-ogsubset-10k-sft-EC2-8xA100-40GB"
+OUTPUT_DIR="/home/ec2-user/checkpoints/dcft-alpaca-reproduction-ogsubset-10k-sft-EC2-8xA100-80GB"
 MASTER_PORT=41592
 
 mkdir -p $OUTPUT_DIR
