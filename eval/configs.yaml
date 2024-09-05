@@ -1,4 +1,4 @@
-alpaca-7b:
+alpaca-7b-reproduction-tacc-8xA100-40GB:
   prompt_template: "alpaca-7b/prompt.txt"
   fn_completions: "huggingface_local_completions"
   completions_kwargs:
@@ -9,5 +9,5 @@ alpaca-7b:
     temperature: 0.7
     top_p: 1.0
     do_sample: True
-  pretty_name: "Alpaca 7B Reproduction"
-  link: "https://huggingface.co"
+  pretty_name: "Alpaca 7B Reproduction TACC Multinode 8xA100 40GB"
+  link: ""
